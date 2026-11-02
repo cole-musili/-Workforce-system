@@ -1,1 +1,160 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign in | Workforce Insights</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="/static/css/app.css"></head><body class="login-page"><div class="login-card"><h2>Workforce Insights</h2><p class="text-muted">Sign in to manage workforce data.</p><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-success w-100">Sign in</button></form></div></body></html>
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sign In | Workforce Insights</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+
+<body>
+
+<div class="login-layout">
+
+    <section class="brand-panel">
+        <div class="brand-content">
+
+            <div class="brand-logo">
+                <img src="{% static 'images/logo.png' %}"
+                     alt="Workforce Insights logo">
+            </div>
+
+            <div class="brand-copy">
+                <span class="eyebrow">WORKFORCE INTELLIGENCE</span>
+
+                <h1>Better workforce decisions start with better insight.</h1>
+
+                <p>
+                    A central workspace for managing employee records,
+                    understanding workforce trends and making
+                    informed organisational decisions.
+                </p>
+            </div>
+
+            <div class="brand-footer">
+                <span>WORKFORCE INSIGHTS</span>
+                <span>PEOPLE · DATA · PERFORMANCE</span>
+            </div>
+
+        </div>
+    </section>
+
+
+    <main class="login-panel">
+
+        <div class="login-container">
+
+            <div class="mobile-logo">
+                <img src="{% static 'images/logo.png' %}"
+                     alt="Workforce Insights">
+            </div>
+
+            <div class="login-heading">
+                <span class="eyebrow">SECURE WORKSPACE</span>
+                <h2>Welcome back.</h2>
+                <p>Sign in to continue to your workspace.</p>
+            </div>
+
+            {% if form.errors %}
+                <div class="error-message">
+                    <span>!</span>
+                    <div>
+                        <strong>Unable to sign in</strong>
+                        <p>Please check your username and password.</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if next %}
+                {% if user.is_authenticated %}
+                    <div class="error-message">
+                        Your account does not have permission to access that page.
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <form method="post" class="login-form">
+                {% csrf_token %}
+
+                <input type="hidden" name="next" value="{{ next|default:'' }}">
+
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">
+                        Username
+                    </label>
+
+                    <div class="input-wrapper">
+                        <span class="input-icon">◎</span>
+                        {{ form.username }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="{{ form.password.id_for_label }}">
+                            Password
+                        </label>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <span class="input-icon">◇</span>
+                        {{ form.password }}
+
+                        <button type="button"
+                                class="password-toggle"
+                                id="passwordToggle"
+                                aria-label="Show password">
+                            Show
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-button">
+                    <span>Sign in to workspace</span>
+                    <span class="button-arrow">→</span>
+                </button>
+
+            </form>
+
+            <div class="security-note">
+                <span class="security-dot"></span>
+                Your connection is protected and secure.
+            </div>
+
+            <footer class="login-footer">
+                © {% now "Y" %} Workforce Insights.
+                All rights reserved.
+            </footer>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+    const password = document.getElementById("id_password");
+    const toggle = document.getElementById("passwordToggle");
+
+    toggle?.addEventListener("click", function () {
+        const showing = password.type === "text";
+
+        password.type = showing ? "password" : "text";
+        toggle.textContent = showing ? "Show" : "Hide";
+        toggle.setAttribute(
+            "aria-label",
+            showing ? "Show password" : "Hide password"
+        );
+    });
+</script>
+
+</body>
+</html>
