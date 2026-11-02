@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
@@ -24,6 +23,7 @@ urlpatterns = [
     ),
 
     path("", core_views.dashboard, name="dashboard"),
+    path("accounts/", include("apps.core.urls")),
 
     path("employees/", include("apps.employees.urls")),
     path("imports/", include("apps.imports.urls")),

@@ -458,10 +458,30 @@
 
         <nav class="sidebar-nav">
 
-            <a href="/admin/" class="sidebar-link">
-                <i class="bi bi-gear-fill"></i>
-                <span>Administration</span>
+            <a href="{% url 'profile' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="bi bi-person-circle"></i>
+                <span>My Profile</span>
             </a>
+
+            <a href="{% url 'change_password' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'change_password' %}active{% endif %}">
+                <i class="bi bi-shield-lock-fill"></i>
+                <span>Change Password</span>
+            </a>
+
+            {% if request.user.is_superuser %}
+                <a href="{% url 'user_management' %}"
+                   class="sidebar-link {% if request.resolver_match.url_name == 'user_management' or request.resolver_match.url_name == 'reset_user_password' %}active{% endif %}">
+                    <i class="bi bi-people-fill"></i>
+                    <span>User Management</span>
+                </a>
+
+                <a href="/admin/" class="sidebar-link">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Administration</span>
+                </a>
+            {% endif %}
 
         </nav>
 
@@ -517,7 +537,13 @@
                         {{ request.user.get_full_name|default:request.user.username }}
                     </div>
                     <div class="small text-muted">
-                        Workspace
+                        {% if request.user.is_superuser %}
+                            Super Administrator
+                        {% elif request.user.is_staff %}
+                            Staff User
+                        {% else %}
+                            Workforce User
+                        {% endif %}
                     </div>
                 </div>
 

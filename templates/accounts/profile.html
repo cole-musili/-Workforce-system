@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile | Workforce Insights{% endblock %}
+{% block header_title %}My Profile{% endblock %}
+{% block header_subtitle %}Manage your personal account information{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <div class="col-12 col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="rounded-circle d-grid place-items-center text-white"
+                             style="width:64px;height:64px;background:#176b48;font-size:24px;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h5 class="mb-1 text-break">
+                                {{ request.user.get_full_name|default:request.user.username }}
+                            </h5>
+                            <div class="text-muted small">@{{ request.user.username }}</div>
+                            {% if request.user.is_superuser %}
+                                <span class="badge text-bg-success mt-2">Superuser</span>
+                            {% elif request.user.groups.all %}
+                                <span class="badge text-bg-secondary mt-2">Workforce Editor</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary mt-2">User</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="border-top pt-3 small">
+                        <div class="d-flex justify-content-between gap-2 mb-2">
+                            <span class="text-muted">Account status</span>
+                            {% if request.user.is_active %}
+                                <span class="text-success fw-semibold">Active</span>
+                            {% else %}
+                                <span class="text-danger fw-semibold">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between gap-2">
+                            <span class="text-muted">Last login</span>
+                            <span>{{ request.user.last_login|date:"d M Y, H:i"|default:"—" }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'change_password' %}" class="btn btn-outline-success w-100 mt-4">
+                        <i class="bi bi-shield-lock me-2"></i>Change password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <h5 class="mb-1">Personal information</h5>
+                        <p class="text-muted small mb-0">
+                            Update your name and contact email. Your username and permissions cannot be changed here.
+                        </p>
+                    </div>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="row g-3">
+                            {% for field in form %}
+                                <div class="col-12 col-md-6">
+                                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold small">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check2 me-1"></i>Save changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
