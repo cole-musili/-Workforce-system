@@ -1,0 +1,281 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-3 py-md-4">
+
+    <!-- Page heading -->
+    <div class="d-flex flex-column flex-md-row
+                justify-content-between align-items-md-center
+                gap-3 mb-4">
+
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-cloud-arrow-up text-success fs-3"></i>
+                <h2 class="mb-0 fw-bold">Import Centre</h2>
+            </div>
+
+            <p class="text-muted mb-0">
+                Upload and prepare employee records from Excel or CSV files.
+            </p>
+        </div>
+
+        <a href="{% url 'imports:history' %}"
+           class="btn btn-outline-secondary">
+
+            <i class="bi bi-clock-history me-1"></i>
+            Import History
+
+        </a>
+
+    </div>
+
+
+    <!-- Upload card -->
+    <div class="card border-0 shadow-sm rounded-4">
+
+        <div class="card-body p-3 p-md-4 p-lg-5">
+
+            <div class="mb-4">
+                <h5 class="fw-bold mb-1">
+                    Upload employee spreadsheet
+                </h5>
+
+                <p class="text-muted small mb-0">
+                    Select a spreadsheet to begin the import process.
+                </p>
+            </div>
+
+
+            <form method="POST"
+                  enctype="multipart/form-data"
+                  id="importUploadForm">
+
+                {% csrf_token %}
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+                        Select spreadsheet
+                    </label>
+
+                    <div class="border rounded-3 p-3 p-md-4
+                                text-center bg-light">
+
+                        <i class="bi bi-file-earmark-spreadsheet
+                                  text-success display-4"></i>
+
+                        <h6 class="fw-semibold mt-2">
+                            Choose your employee file
+                        </h6>
+
+                        <p class="text-muted small">
+                            Excel or CSV files up to 10 MB
+                        </p>
+
+                        {{ form.uploaded_file }}
+
+                        {% for error in form.uploaded_file.errors %}
+                            <div class="text-danger small mt-2">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                        <div id="selectedFile"
+                             class="small text-success mt-3"
+                             style="display:none;">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Upload guidance -->
+                <div class="alert alert-info border-0 rounded-3">
+
+                    <div class="d-flex gap-2">
+
+                        <i class="bi bi-info-circle-fill fs-5"></i>
+
+                        <div>
+
+                            <strong>Automatic spreadsheet detection</strong>
+
+                            <ul class="small mb-0 mt-2 ps-3">
+                                <li>Supported formats: CSV, XLSX and XLS.</li>
+                                <li>Maximum file size: 10 MB.</li>
+                                <li>Column headings are detected automatically.</li>
+                                <li>Empty rows are ignored.</li>
+                                <li>Spreadsheet records are not modified during preview.</li>
+                            </ul>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Actions -->
+                <div class="d-flex flex-column flex-sm-row
+                            gap-2 justify-content-end">
+
+                    <a href="/employees/"
+                       class="btn btn-light border">
+
+                        Cancel
+
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success px-4"
+                            id="uploadButton">
+
+                        <i class="bi bi-cloud-upload me-1"></i>
+                        Upload and Preview
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- Workflow information -->
+    <div class="row g-3 mt-3">
+
+        <div class="col-12 col-md-4">
+
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+
+                    <i class="bi bi-upload fs-3 text-success"></i>
+
+                    <h6 class="fw-bold mt-2">
+                        1. Upload
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Select your employee spreadsheet.
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="col-12 col-md-4">
+
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+
+                    <i class="bi bi-table fs-3 text-primary"></i>
+
+                    <h6 class="fw-bold mt-2">
+                        2. Preview
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Review detected headings and employee records.
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="col-12 col-md-4">
+
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+
+                    <i class="bi bi-shield-check fs-3 text-warning"></i>
+
+                    <h6 class="fw-bold mt-2">
+                        3. Validate
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Check records before importing them.
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const fileInput = document.getElementById(
+        "{{ form.uploaded_file.id_for_label }}"
+    );
+
+    const selectedFile = document.getElementById("selectedFile");
+
+    const uploadForm = document.getElementById("importUploadForm");
+
+    const uploadButton = document.getElementById("uploadButton");
+
+
+    if (fileInput) {
+
+        fileInput.addEventListener("change", function () {
+
+            if (this.files.length > 0) {
+
+                const file = this.files[0];
+
+                selectedFile.style.display = "block";
+
+                selectedFile.textContent =
+                    file.name + " (" +
+                    (file.size / (1024 * 1024)).toFixed(2) +
+                    " MB)";
+
+            } else {
+
+                selectedFile.style.display = "none";
+
+            }
+
+        });
+
+    }
+
+
+    if (uploadForm) {
+
+        uploadForm.addEventListener("submit", function () {
+
+            if (uploadForm.checkValidity()) {
+
+                uploadButton.disabled = true;
+
+                uploadButton.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-2"></span>' +
+                    'Uploading...';
+
+            }
+
+        });
+
+    }
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,489 @@
+
+{% extends "base.html" %}
+
+{% block title %}Review Import | Workforce Insights{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Page heading -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Review employee import</h3>
+            <p class="text-muted mb-0">{{ batch.filename }}</p>
+        </div>
+
+        <a href="{% url 'imports:history' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Import history
+        </a>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Total records</small>
+                    <h3 class="fw-bold mb-0">{{ batch.total_rows }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Ready records</small>
+                    <h3 class="fw-bold text-success mb-0">{{ ready_count }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Missing names</small>
+                    <h3 class="fw-bold text-danger mb-0">{{ missing_names }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Duplicate rows</small>
+                    <h3 class="fw-bold text-warning mb-0">{{ duplicate_rows }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Import guidance -->
+    <div class="alert alert-info border-0">
+        <i class="bi bi-info-circle me-2"></i>
+        Warnings do not prevent you from reviewing the workbook.
+        Rows without names cannot be saved as employees, but other
+        valid records can still be imported.
+        Missing employee numbers are allowed.
+    </div>
+
+    <!-- Worksheet information -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="fw-bold mb-3">Worksheet information</h6>
+
+            <div class="d-flex flex-wrap gap-2">
+                {% for sheet in batch.selected_sheets %}
+                    <span class="badge bg-light text-dark border p-2">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+                        {{ sheet }}
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Staged records -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Staged employee records</h5>
+                    <small class="text-muted">
+                        Review, edit and select records before importing.
+                    </small>
+                </div>
+
+                <a href="{% url 'imports:confirm' batch.pk %}"
+                   class="btn btn-success">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Continue to confirmation
+                </a>
+            </div>
+
+            <!-- Filters -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a href="?filter=all" class="btn btn-sm btn-outline-secondary">All</a>
+                <a href="?filter=ready" class="btn btn-sm btn-outline-success">Ready</a>
+                <a href="?filter=missing_name" class="btn btn-sm btn-outline-danger">Missing names</a>
+                <a href="?filter=missing_number" class="btn btn-sm btn-outline-warning">Missing numbers</a>
+                <a href="?filter=duplicates" class="btn btn-sm btn-outline-dark">Duplicates</a>
+            </div>
+
+            <!-- Selection form is separate from individual row forms -->
+            <form method="post"
+                  action="{% url 'imports:update_selection' batch.pk %}"
+                  id="selectionForm">
+                {% csrf_token %}
+            </form>
+
+            <!-- Bulk actions -->
+            <div class="card bg-light border-0 mb-3">
+                <div class="card-body">
+                    <div class="row align-items-end g-3">
+
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label fw-semibold mb-1">
+                                Bulk action
+                            </label>
+
+                            <select id="bulkAction" class="form-select">
+                                <option value="">Choose an action...</option>
+                                <option value="auto">Automatic</option>
+                                <option value="add">Add</option>
+                                <option value="update">Update</option>
+                                <option value="skip">Skip</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-lg-auto">
+                            <button type="button"
+                                    id="applyBulkAction"
+                                    class="btn btn-primary">
+                                <i class="bi bi-check2-all me-1"></i>
+                                Apply to selected
+                            </button>
+                        </div>
+
+                        <div class="col-12 col-lg">
+                            <small class="text-muted" id="selectionCount">
+                                0 records selected
+                            </small>
+                            <div id="bulkActionStatus"
+                                 class="small mt-1"
+                                 aria-live="polite"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Records table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>
+                                <input type="checkbox"
+                                       id="selectAll"
+                                       class="form-check-input"
+                                       title="Select all visible records">
+                            </th>
+                            <th>Source</th>
+                            <th>Employee number</th>
+                            <th>Name</th>
+                            <th>Station</th>
+                            <th>Warnings</th>
+                            <th>Action</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in review_rows %}
+                            <tr data-row-id="{{ item.row.pk }}">
+
+                                <td>
+                                    <input type="checkbox"
+                                           class="form-check-input row-checkbox"
+                                           name="selected_rows"
+                                           form="selectionForm"
+                                           value="{{ item.row.pk }}"
+                                           {% if item.row.is_selected %}checked{% endif %}>
+                                </td>
+
+                                <td>
+                                    <div class="fw-semibold">
+                                        {{ item.row.source_sheet }}
+                                    </div>
+                                    <small class="text-muted">
+                                        {% if item.row.source_period %}
+                                            {{ item.row.source_period }} ·
+                                        {% endif %}
+                                        Row {{ item.row.source_row_number }}
+                                    </small>
+                                </td>
+
+                                <td>
+                                    {{ item.data.employee_number|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ item.data.full_name|default:"Missing name" }}
+                                </td>
+
+                                <td>
+                                    {{ item.data.station|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {% for warning in item.warnings %}
+                                        <span class="badge
+                                            {% if warning.severity == 'danger' %}bg-danger
+                                            {% elif warning.severity == 'warning' %}bg-warning text-dark
+                                            {% else %}bg-info text-dark{% endif %} mb-1">
+                                            {{ warning.label }}
+                                        </span>
+                                    {% empty %}
+                                        <span class="badge bg-success">Ready</span>
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    <form method="post"
+                                          class="row-action-form"
+                                          action="{% url 'imports:row_action' batch.pk item.row.pk %}">
+                                        {% csrf_token %}
+
+                                        <select name="action"
+                                                class="form-select form-select-sm row-action-select"
+                                                onchange="this.form.submit()">
+
+                                            {% for value, label in item.row.ACTION_CHOICES %}
+                                                <option value="{{ value }}"
+                                                    {% if item.row.action == value %}selected{% endif %}>
+                                                    {{ label }}
+                                                </option>
+                                            {% endfor %}
+
+                                        </select>
+                                    </form>
+                                </td>
+
+                                <td>
+                                    <a href="{% url 'imports:edit_row' batch.pk item.row.pk %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+                            <tr>
+                                <td colspan="8"
+                                    class="text-center text-muted py-5">
+                                    No records match this filter.
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="submit"
+                        form="selectionForm"
+                        class="btn btn-outline-primary">
+                    <i class="bi bi-save me-1"></i>
+                    Save row selection
+                </button>
+
+                <span class="small text-muted align-self-center">
+                    Save your selection separately when you want to preserve
+                    which records are selected.
+                </span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bulk correction -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="fw-bold">Bulk correction</h5>
+            <p class="text-muted">
+                Select records above, save the selection, then apply a
+                common value to the selected records.
+            </p>
+
+            <a href="{% url 'imports:bulk_correct' batch.pk %}"
+               class="btn btn-outline-primary">
+                <i class="bi bi-pencil-square me-1"></i>
+                Open bulk correction
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = Array.from(
+        document.querySelectorAll(".row-checkbox")
+    );
+
+    const selectionCount = document.getElementById("selectionCount");
+    const bulkAction = document.getElementById("bulkAction");
+    const applyBulkAction = document.getElementById("applyBulkAction");
+    const bulkActionStatus = document.getElementById("bulkActionStatus");
+
+    function getSelectedCheckboxes() {
+        return rowCheckboxes.filter(function (checkbox) {
+            return checkbox.checked;
+        });
+    }
+
+    function updateSelectionDisplay() {
+        const selected = getSelectedCheckboxes();
+
+        selectionCount.textContent =
+            selected.length + " record" +
+            (selected.length === 1 ? "" : "s") +
+            " selected";
+
+        if (selectAll) {
+            selectAll.checked =
+                rowCheckboxes.length > 0 &&
+                selected.length === rowCheckboxes.length;
+
+            selectAll.indeterminate =
+                selected.length > 0 &&
+                selected.length < rowCheckboxes.length;
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener("change", function () {
+            rowCheckboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAll.checked;
+            });
+
+            updateSelectionDisplay();
+        });
+    }
+
+    rowCheckboxes.forEach(function (checkbox) {
+        checkbox.addEventListener("change", updateSelectionDisplay);
+    });
+
+    updateSelectionDisplay();
+
+    if (applyBulkAction) {
+        applyBulkAction.addEventListener("click", async function () {
+
+            const selected = getSelectedCheckboxes();
+            const action = bulkAction.value;
+
+            bulkActionStatus.className = "small mt-1";
+            bulkActionStatus.textContent = "";
+
+            if (selected.length === 0) {
+                bulkActionStatus.classList.add("text-danger");
+                bulkActionStatus.textContent =
+                    "Select at least one record first.";
+                return;
+            }
+
+            if (!action) {
+                bulkActionStatus.classList.add("text-danger");
+                bulkActionStatus.textContent =
+                    "Choose an action to apply.";
+                return;
+            }
+
+            const confirmed = window.confirm(
+                "Apply '" + action.toUpperCase() +
+                "' to " + selected.length + " selected records?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            applyBulkAction.disabled = true;
+            bulkAction.disabled = true;
+
+            let completed = 0;
+            let failed = 0;
+
+            bulkActionStatus.classList.add("text-muted");
+            bulkActionStatus.textContent =
+                "Applying action to selected records...";
+
+            try {
+                for (const checkbox of selected) {
+
+                    const row = checkbox.closest("tr");
+                    const form = row.querySelector(".row-action-form");
+                    const actionSelect = form.querySelector(
+                        ".row-action-select"
+                    );
+
+                    const csrfInput = form.querySelector(
+                        'input[name="csrfmiddlewaretoken"]'
+                    );
+
+                    if (!form || !actionSelect || !csrfInput) {
+                        failed++;
+                        continue;
+                    }
+
+                    const formData = new URLSearchParams();
+                    formData.append("action", action);
+                    formData.append(
+                        "csrfmiddlewaretoken",
+                        csrfInput.value
+                    );
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: "POST",
+                            credentials: "same-origin",
+                            headers: {
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded",
+                                "X-CSRFToken": csrfInput.value,
+                                "X-Requested-With": "XMLHttpRequest"
+                            },
+                            body: formData.toString()
+                        });
+
+                        if (!response.ok) {
+                            failed++;
+                            continue;
+                        }
+
+                        actionSelect.value = action;
+                        completed++;
+
+                    } catch (error) {
+                        failed++;
+                    }
+                }
+
+                if (failed === 0) {
+                    bulkActionStatus.className =
+                        "small mt-1 text-success";
+                    bulkActionStatus.textContent =
+                        "Successfully updated " + completed +
+                        " selected records. Refreshing...";
+                } else {
+                    bulkActionStatus.className =
+                        "small mt-1 text-warning";
+                    bulkActionStatus.textContent =
+                        completed + " updated; " + failed +
+                        " could not be updated. Refreshing...";
+                }
+
+                window.setTimeout(function () {
+                    window.location.reload();
+                }, 1000);
+
+            } finally {
+                applyBulkAction.disabled = false;
+                bulkAction.disabled = false;
+            }
+        });
+    }
+
+});
+</script>
+{% endblock %}

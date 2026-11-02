@@ -1,0 +1,875 @@
+
+{% extends "base.html" %}
+
+{% block title %}Workforce Dashboard | Workforce Insights{% endblock %}
+
+{% block header_title %}Workforce Analytics{% endblock %}
+{% block header_subtitle %}Organisation-wide employee data and workforce insights{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .dashboard-heading h1 {
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -.7px;
+        margin-bottom: 5px;
+    }
+
+    .dashboard-heading p {
+        color: var(--wi-muted);
+        margin: 0;
+    }
+
+    .metric-card {
+        background: var(--wi-surface);
+        border: 1px solid var(--wi-border);
+        border-radius: 15px;
+        padding: 21px;
+        height: 100%;
+        box-shadow: var(--wi-shadow);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 22px rgba(20,45,32,.09);
+    }
+
+    .metric-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .metric-label {
+        color: var(--wi-muted);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .metric-icon {
+        width: 43px;
+        height: 43px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 20px;
+    }
+
+    .metric-value {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-top: 14px;
+        color: var(--wi-text);
+    }
+
+    .metric-note {
+        color: var(--wi-muted);
+        font-size: 11px;
+        margin-top: 3px;
+    }
+
+    .dashboard-card {
+        background: var(--wi-surface);
+        border: 1px solid var(--wi-border);
+        border-radius: 15px;
+        box-shadow: var(--wi-shadow);
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .dashboard-card-header {
+        padding: 19px 20px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .dashboard-card-title {
+        font-size: 14px;
+        font-weight: 750;
+        margin: 0;
+        color: var(--wi-text);
+    }
+
+    .dashboard-card-subtitle {
+        color: var(--wi-muted);
+        font-size: 11px;
+        margin-top: 4px;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        padding: 8px 18px 20px;
+    }
+
+    .chart-container.large {
+        height: 320px;
+    }
+
+    .chart-container.doughnut {
+        height: 260px;
+        max-width: 400px;
+        margin: auto;
+    }
+
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 14px;
+        border: 1px solid var(--wi-border);
+        border-radius: 11px;
+        color: var(--wi-text);
+        transition: all .2s ease;
+        height: 100%;
+    }
+
+    .quick-action:hover {
+        border-color: var(--wi-primary);
+        background: var(--wi-primary-light);
+        color: var(--wi-primary);
+        transform: translateY(-2px);
+    }
+
+    .quick-action-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--wi-primary-light);
+        color: var(--wi-primary);
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .quick-action strong {
+        display: block;
+        font-size: 12px;
+    }
+
+    .quick-action small {
+        color: var(--wi-muted);
+        font-size: 10px;
+    }
+
+    .distribution-list {
+        padding: 0 20px 18px;
+    }
+
+    .distribution-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--wi-border);
+        font-size: 12px;
+    }
+
+    .distribution-item:last-child {
+        border-bottom: 0;
+    }
+
+    .distribution-name {
+        color: var(--wi-text);
+        font-weight: 500;
+    }
+
+    .distribution-count {
+        font-weight: 750;
+        color: var(--wi-primary);
+    }
+
+    .empty-chart {
+        height: 100%;
+        min-height: 180px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: var(--wi-muted);
+        font-size: 12px;
+    }
+
+    .dashboard-table th {
+        padding: 12px 15px;
+    }
+
+    .dashboard-table td {
+        padding: 13px 15px;
+        vertical-align: middle;
+    }
+
+    .employee-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: var(--wi-primary-light);
+        color: var(--wi-primary);
+        font-weight: 800;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .employee-name {
+        font-weight: 700;
+        font-size: 12px;
+        color: var(--wi-text);
+    }
+
+    .employee-designation {
+        font-size: 10px;
+        color: var(--wi-muted);
+        margin-top: 3px;
+    }
+
+    .dashboard-footer-link {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--wi-primary);
+    }
+
+    @media (max-width: 575px) {
+        .dashboard-heading h1 {
+            font-size: 21px;
+        }
+
+        .metric-card {
+            padding: 15px;
+        }
+
+        .metric-value {
+            font-size: 25px;
+        }
+
+        .dashboard-card-header {
+            padding: 15px;
+        }
+
+        .chart-container {
+            height: 250px;
+            padding: 5px 10px 15px;
+        }
+
+        .dashboard-table {
+            min-width: 650px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page heading -->
+    <div class="dashboard-heading">
+        <div>
+            <h1>Workforce Dashboard</h1>
+            <p>Understand your organisation's workforce at a glance.</p>
+        </div>
+
+        <a href="{% url 'employee_list' %}" class="btn btn-success">
+            <i class="bi bi-people-fill me-2"></i>
+            View employee directory
+        </a>
+    </div>
+
+
+    <!-- Summary metrics -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-top">
+                    <span class="metric-label">Current workforce</span>
+                    <div class="metric-icon text-primary bg-primary bg-opacity-10">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ total_employees|default:0 }}</div>
+                <div class="metric-note">Non-archived employee records</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-top">
+                    <span class="metric-label">Archived employees</span>
+                    <div class="metric-icon text-secondary bg-secondary bg-opacity-10">
+                        <i class="bi bi-archive-fill"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ archived_employees|default:0 }}</div>
+                <div class="metric-note">Records in the archive</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-top">
+                    <span class="metric-label">Work stations</span>
+                    <div class="metric-icon text-success bg-success bg-opacity-10">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ total_stations|default:0 }}</div>
+                <div class="metric-note">Distinct non-empty stations</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-top">
+                    <span class="metric-label">Pending duplicates</span>
+                    <div class="metric-icon text-warning bg-warning bg-opacity-10">
+                        <i class="bi bi-copy"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ pending_duplicates|default:0 }}</div>
+                <div class="metric-note">Groups awaiting manual review</div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Quick actions -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-md-4">
+            <a href="{% url 'employee_create' %}" class="quick-action">
+                <div class="quick-action-icon">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <div>
+                    <strong>Add employee</strong>
+                    <small>Create a new employee record</small>
+                </div>
+                <i class="bi bi-arrow-right ms-auto"></i>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <a href="{% url 'imports:upload' %}" class="quick-action">
+                <div class="quick-action-icon">
+                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                </div>
+                <div>
+                    <strong>Import employee data</strong>
+                    <small>Upload an Excel or CSV workbook</small>
+                </div>
+                <i class="bi bi-arrow-right ms-auto"></i>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <a href="{% url 'duplicates:dashboard' %}" class="quick-action">
+                <div class="quick-action-icon">
+                    <i class="bi bi-copy"></i>
+                </div>
+                <div>
+                    <strong>Review duplicates</strong>
+                    <small>Inspect potential duplicate records</small>
+                </div>
+                <i class="bi bi-arrow-right ms-auto"></i>
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- Gender and job group charts -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-lg-5">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h5 class="dashboard-card-title">Gender distribution</h5>
+                        <p class="dashboard-card-subtitle">
+                            Workforce composition by gender
+                        </p>
+                    </div>
+                    <i class="bi bi-pie-chart text-success fs-5"></i>
+                </div>
+
+                {% if gender_data %}
+                    <div class="chart-container doughnut">
+                        <canvas id="genderChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">
+                        <div>
+                            <i class="bi bi-pie-chart fs-2 d-block mb-2"></i>
+                            No gender data available
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="distribution-list">
+                    {% for item in gender_data %}
+                        <div class="distribution-item">
+                            <span class="distribution-name">{{ item.label }}</span>
+                            <span class="distribution-count">{{ item.count }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-12 col-lg-7">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h5 class="dashboard-card-title">Job group distribution</h5>
+                        <p class="dashboard-card-subtitle">
+                            Employee records across the leading job groups
+                        </p>
+                    </div>
+                    <i class="bi bi-bar-chart-fill text-success fs-5"></i>
+                </div>
+
+                {% if job_group_data %}
+                    <div class="chart-container">
+                        <canvas id="jobGroupChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">No job group data available</div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Station and appointment charts -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-lg-7">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h5 class="dashboard-card-title">Employees by station</h5>
+                        <p class="dashboard-card-subtitle">
+                            Distribution across work locations
+                        </p>
+                    </div>
+                    <i class="bi bi-geo-alt text-success fs-5"></i>
+                </div>
+
+                {% if station_data %}
+                    <div class="chart-container large">
+                        <canvas id="stationChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">No station data available</div>
+                {% endif %}
+            </div>
+        </div>
+
+
+        <div class="col-12 col-lg-5">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h5 class="dashboard-card-title">Appointment types</h5>
+                        <p class="dashboard-card-subtitle">
+                            Employment appointment distribution
+                        </p>
+                    </div>
+                    <i class="bi bi-person-badge text-success fs-5"></i>
+                </div>
+
+                {% if appointment_data %}
+                    <div class="chart-container doughnut">
+                        <canvas id="appointmentChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">No appointment data available</div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Employment status and arrival trends -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-lg-5">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h5 class="dashboard-card-title">Employment status</h5>
+                        <p class="dashboard-card-subtitle">
+                            Distribution by recorded status
+                        </p>
+                    </div>
+                    <i class="bi bi-clipboard-data text-success fs-5"></i>
+                </div>
+
+                {% if status_data %}
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">No employment status data available</div>
+                {% endif %}
+            </div>
+        </div>
+
+
+        <div class="col-12 col-lg-7">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h5 class="dashboard-card-title">Employee arrival trends</h5>
+                        <p class="dashboard-card-subtitle">
+                            Employees grouped by their date of arrival
+                        </p>
+                    </div>
+                    <i class="bi bi-graph-up-arrow text-success fs-5"></i>
+                </div>
+
+                {% if arrival_trend.data %}
+                    <div class="chart-container large">
+                        <canvas id="arrivalChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">
+                        No employee arrival dates available
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Recent employees -->
+    <div class="dashboard-card mb-4">
+
+        <div class="dashboard-card-header">
+            <div>
+                <h5 class="dashboard-card-title">Recently added employees</h5>
+                <p class="dashboard-card-subtitle">
+                    Latest employee records added to the system
+                </p>
+            </div>
+
+            <a href="{% url 'employee_list' %}" class="dashboard-footer-link">
+                View directory <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table dashboard-table align-middle mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>P/No.</th>
+                        <th>Designation</th>
+                        <th>Job group</th>
+                        <th>Station</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for employee in recent_employees %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="employee-avatar">
+                                        {{ employee.full_name|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="employee-name">
+                                            {{ employee.full_name }}
+                                        </div>
+                                        <div class="employee-designation">
+                                            Added {{ employee.created_at|date:"d M Y" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>{{ employee.employee_number|default:"—" }}</td>
+                            <td>{{ employee.designation|default:"—" }}</td>
+                            <td>{{ employee.job_group|default:"—" }}</td>
+                            <td>{{ employee.station|default:"—" }}</td>
+                            <td>
+                                {% if employee.status %}
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        {{ employee.status }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'employee_detail' employee.pk %}"
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="bi bi-people text-muted fs-2 d-block mb-2"></i>
+                                <strong>No employee records yet</strong>
+                                <p class="text-muted small mt-1 mb-3">
+                                    Import your workbook or add your first employee.
+                                </p>
+                                <a href="{% url 'imports:upload' %}"
+                                   class="btn btn-success btn-sm">
+                                    Import employees
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center text-muted small py-2">
+        Workforce Insights · Workforce data overview
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const chartFont = {
+        family: "'Segoe UI', sans-serif",
+        size: 11
+    };
+
+    const tooltipOptions = {
+        backgroundColor: "#103d2d",
+        padding: 12,
+        titleFont: { size: 12, weight: "bold" },
+        bodyFont: { size: 11 },
+        cornerRadius: 8
+    };
+
+    function readData(elementId) {
+        const element = document.getElementById(elementId);
+        return element ? JSON.parse(element.textContent) : [];
+    }
+
+    function createDoughnut(canvasId, items) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || !items.length) return;
+
+        new Chart(canvas, {
+            type: "doughnut",
+            data: {
+                labels: items.map(item => item.label),
+                datasets: [{
+                    data: items.map(item => item.count),
+                    backgroundColor: [
+                        "#176b48",
+                        "#4ade80",
+                        "#60a5fa",
+                        "#fbbf24",
+                        "#a78bfa",
+                        "#f87171",
+                        "#14b8a6",
+                        "#94a3b8"
+                    ],
+                    borderWidth: 3,
+                    borderColor: "#ffffff",
+                    hoverOffset: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "66%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            padding: 14,
+                            font: chartFont
+                        }
+                    },
+                    tooltip: tooltipOptions
+                }
+            }
+        });
+    }
+
+    function createBar(canvasId, items, horizontal = false) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || !items.length) return;
+
+        new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: items.map(item => item.label),
+                datasets: [{
+                    label: "Employees",
+                    data: items.map(item => item.count),
+                    backgroundColor: "#25865c",
+                    hoverBackgroundColor: "#103d2d",
+                    borderRadius: 6,
+                    maxBarThickness: 35
+                }]
+            },
+            options: {
+                indexAxis: horizontal ? "y" : "x",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipOptions
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { display: !horizontal },
+                        ticks: {
+                            precision: 0,
+                            font: chartFont
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: horizontal },
+                        ticks: {
+                            precision: 0,
+                            font: chartFont
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function createArrivalChart(data) {
+        const canvas = document.getElementById("arrivalChart");
+        if (!canvas || !data.labels.length) return;
+
+        new Chart(canvas, {
+            type: "line",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "Employees arriving",
+                    data: data.data,
+                    borderColor: "#176b48",
+                    backgroundColor: "rgba(23,107,72,.12)",
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: "#176b48"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipOptions
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            font: chartFont
+                        },
+                        grid: {
+                            color: "rgba(0,0,0,.05)"
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: chartFont
+                        },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    createDoughnut(
+        "genderChart",
+        readData("gender-chart-data")
+    );
+
+    createBar(
+        "jobGroupChart",
+        readData("job-group-chart-data"),
+        false
+    );
+
+    createBar(
+        "stationChart",
+        readData("station-chart-data"),
+        true
+    );
+
+    createDoughnut(
+        "appointmentChart",
+        readData("appointment-chart-data")
+    );
+
+    createBar(
+        "statusChart",
+        readData("status-chart-data"),
+        false
+    );
+
+    createArrivalChart(
+        readData("arrival-chart-data")
+    );
+
+});
+</script>
+
+{{ gender_chart_json|json_script:"gender-chart-data" }}
+{{ job_group_chart_json|json_script:"job-group-chart-data" }}
+{{ station_chart_json|json_script:"station-chart-data" }}
+{{ appointment_chart_json|json_script:"appointment-chart-data" }}
+{{ status_chart_json|json_script:"status-chart-data" }}
+{{ arrival_chart_json|json_script:"arrival-chart-data" }}
+
+{% endblock %}

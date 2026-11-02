@@ -1,0 +1,664 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Workforce Analytics | Workforce Insights{% endblock %}
+{% block header_title %}Workforce Analytics{% endblock %}
+{% block header_subtitle %}Understand your workforce through data and insights{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-page {
+        --analytics-radius: 16px;
+    }
+
+    .analytics-hero {
+        background: linear-gradient(120deg, #123d32, #176b50);
+        color: white;
+        border-radius: 18px;
+        padding: 26px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .analytics-hero::after {
+        content: "";
+        position: absolute;
+        width: 210px;
+        height: 210px;
+        border: 35px solid rgba(255,255,255,.07);
+        border-radius: 50%;
+        right: -55px;
+        top: -90px;
+    }
+
+    .analytics-hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .analytics-card {
+        background: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: var(--analytics-radius);
+        height: 100%;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .analytics-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,.07);
+    }
+
+    .analytics-stat {
+        padding: 20px;
+    }
+
+    .analytics-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 21px;
+    }
+
+    .analytics-number {
+        font-size: clamp(1.65rem, 3vw, 2rem);
+        font-weight: 750;
+        letter-spacing: -.8px;
+    }
+
+    .analytics-chart-card {
+        padding: 20px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 280px;
+        width: 100%;
+    }
+
+    .analytics-section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .analytics-table th {
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--bs-secondary-color);
+        white-space: nowrap;
+    }
+
+    .analytics-table td {
+        vertical-align: middle;
+    }
+
+    .analytics-progress {
+        height: 7px;
+        border-radius: 20px;
+    }
+
+    .analytics-empty {
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: var(--bs-secondary-color);
+        text-align: center;
+    }
+
+    @media (max-width: 576px) {
+        .analytics-hero {
+            padding: 20px;
+        }
+
+        .analytics-chart-card {
+            padding: 15px;
+        }
+
+        .chart-container {
+            height: 240px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid py-3 analytics-page">
+
+    <!-- Hero -->
+    <section class="analytics-hero mb-4">
+        <div class="analytics-hero-content">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <span class="badge bg-light text-success mb-2">
+                        <i class="bi bi-graph-up-arrow me-1"></i>
+                        Workforce intelligence
+                    </span>
+
+                    <h3 class="fw-bold mb-2">Workforce overview</h3>
+
+                    <p class="mb-0 opacity-75">
+                        Explore workforce composition, employment structure
+                        and employee information quality.
+                    </p>
+                </div>
+
+                <div class="text-md-end">
+                    <div class="small opacity-75">Active workforce</div>
+                    <div class="display-5 fw-bold">{{ total_employees|default:0 }}</div>
+                    <div class="small opacity-75">Employees in the active directory</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- KPI cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-xl-3">
+            <div class="analytics-card analytics-stat">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="analytics-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <span class="badge bg-success bg-opacity-10 text-success">
+                        Active
+                    </span>
+                </div>
+
+                <div class="analytics-number">{{ total_employees|default:0 }}</div>
+                <div class="text-muted small">Total employees</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="analytics-card analytics-stat">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="analytics-icon bg-secondary bg-opacity-10 text-secondary">
+                        <i class="bi bi-archive"></i>
+                    </div>
+                </div>
+
+                <div class="analytics-number">{{ archived_employees|default:0 }}</div>
+                <div class="text-muted small">Archived records</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="analytics-card analytics-stat">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="analytics-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                </div>
+
+                <div class="analytics-number">
+                    {{ employees_with_arrival_date|default:0 }}
+                </div>
+                <div class="text-muted small">With arrival date</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="analytics-card analytics-stat">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="analytics-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-calendar-x"></i>
+                    </div>
+                </div>
+
+                <div class="analytics-number">
+                    {{ employees_without_arrival_date|default:0 }}
+                </div>
+                <div class="text-muted small">Missing arrival date</div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Workforce composition -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">Workforce composition</h5>
+            <p class="text-muted small mb-0">
+                Understand who makes up your workforce.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-lg-6">
+            <div class="analytics-card analytics-chart-card">
+                <h6 class="analytics-section-title">Gender distribution</h6>
+                <p class="text-muted small">Active employees by gender</p>
+                <div class="chart-container">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="analytics-card analytics-chart-card">
+                <h6 class="analytics-section-title">Appointment structure</h6>
+                <p class="text-muted small">Employees by appointment type</p>
+                <div class="chart-container">
+                    <canvas id="appointmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="analytics-card analytics-chart-card">
+                <h6 class="analytics-section-title">Job group distribution</h6>
+                <p class="text-muted small">Active workforce by job group</p>
+                <div class="chart-container">
+                    <canvas id="jobGroupChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="analytics-card analytics-chart-card">
+                <h6 class="analytics-section-title">Ethnicity distribution</h6>
+                <p class="text-muted small">Recorded employee demographics</p>
+                <div class="chart-container">
+                    <canvas id="ethnicityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Organisational distribution -->
+    <div class="mb-3">
+        <h5 class="fw-bold mb-1">Organisational structure</h5>
+        <p class="text-muted small">
+            Explore how employees are distributed across stations and roles.
+        </p>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12">
+            <div class="analytics-card analytics-chart-card">
+                <h6 class="analytics-section-title">Employees by station</h6>
+                <p class="text-muted small">Workforce distribution across stations</p>
+                <div class="chart-container" style="height:350px;">
+                    <canvas id="stationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="analytics-card analytics-chart-card">
+                <h6 class="analytics-section-title">Employees by designation</h6>
+                <p class="text-muted small">Distribution of recorded designations</p>
+                <div class="chart-container" style="height:350px;">
+                    <canvas id="designationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Recruitment trends -->
+    <div class="mb-3">
+        <h5 class="fw-bold mb-1">Employee arrival trends</h5>
+        <p class="text-muted small">
+            Based on available individual dates of arrival.
+        </p>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-lg-8">
+            <div class="analytics-card analytics-chart-card">
+                <h6 class="analytics-section-title">Arrivals by year</h6>
+                <p class="text-muted small">Number of employees by arrival year</p>
+                <div class="chart-container">
+                    <canvas id="arrivalYearChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="analytics-card analytics-stat h-100">
+                <h6 class="analytics-section-title mb-3">Arrival date completeness</h6>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small text-muted">Dates available</span>
+                    <strong>{{ employees_with_arrival_date|default:0 }}</strong>
+                </div>
+
+                <div class="progress analytics-progress mb-3">
+                    <div class="progress-bar bg-success"
+                         style="width: {% widthratio employees_with_arrival_date total_employees 100 %}%">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small text-muted">Dates missing</span>
+                    <strong>{{ employees_without_arrival_date|default:0 }}</strong>
+                </div>
+
+                <div class="progress analytics-progress mb-4">
+                    <div class="progress-bar bg-warning"
+                         style="width: {% widthratio employees_without_arrival_date total_employees 100 %}%">
+                    </div>
+                </div>
+
+                <div class="border-top pt-3">
+                    <div class="text-muted small mb-1">Total active records</div>
+                    <div class="fs-4 fw-bold">{{ total_employees }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Data quality -->
+    <div class="mb-3">
+        <h5 class="fw-bold mb-1">Employee data quality</h5>
+        <p class="text-muted small">
+            Identify missing information that may affect reporting.
+        </p>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-md-6">
+            <div class="analytics-card analytics-stat">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <div class="fw-semibold">Phone number coverage</div>
+                        <small class="text-muted">Employee contact information</small>
+                    </div>
+                    <i class="bi bi-telephone fs-4 text-primary"></i>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="fs-3 fw-bold">{{ employees_with_phone }}</div>
+                    <div class="small text-muted">
+                        of {{ total_employees }} employees
+                    </div>
+                </div>
+
+                <div class="progress analytics-progress mt-3">
+                    <div class="progress-bar bg-primary"
+                         style="width: {% widthratio employees_with_phone total_employees 100 %}%">
+                    </div>
+                </div>
+
+                <small class="text-muted mt-2 d-block">
+                    {{ employees_without_phone }} records without a phone number
+                </small>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="analytics-card analytics-stat">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <div class="fw-semibold">Designation coverage</div>
+                        <small class="text-muted">Employee role information</small>
+                    </div>
+                    <i class="bi bi-briefcase fs-4 text-success"></i>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="fs-3 fw-bold">{{ employees_with_designation }}</div>
+                    <div class="small text-muted">
+                        of {{ total_employees }} employees
+                    </div>
+                </div>
+
+                <div class="progress analytics-progress mt-3">
+                    <div class="progress-bar bg-success"
+                         style="width: {% widthratio employees_with_designation total_employees 100 %}%">
+                    </div>
+                </div>
+
+                <small class="text-muted mt-2 d-block">
+                    {{ employees_without_designation }} records without a designation
+                </small>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Recent employees -->
+    <div class="analytics-card overflow-hidden mb-4">
+        <div class="p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h6 class="fw-bold mb-1">Recently added employees</h6>
+                <small class="text-muted">Latest employee records added to the system</small>
+            </div>
+
+            <a href="{% url 'employee_list' %}"
+               class="btn btn-outline-success btn-sm">
+                View employees <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover analytics-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>P/No.</th>
+                        <th>Designation</th>
+                        <th>Station</th>
+                        <th>Added</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for employee in recent_employees %}
+                        <tr>
+                            <td class="fw-semibold">{{ employee.full_name }}</td>
+                            <td>{{ employee.employee_number|default:"—" }}</td>
+                            <td>{{ employee.designation|default:"—" }}</td>
+                            <td>{{ employee.station|default:"—" }}</td>
+                            <td>{{ employee.created_at|date:"d M Y" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="analytics-empty">
+                                    <i class="bi bi-people fs-1 mb-2"></i>
+                                    <strong>No employee records found</strong>
+                                    <small>Import employees to start viewing analytics.</small>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{{ gender_chart|json_script:"gender-chart-data" }}
+{{ appointment_chart|json_script:"appointment-chart-data" }}
+{{ job_group_chart|json_script:"job-group-chart-data" }}
+{{ ethnicity_chart|json_script:"ethnicity-chart-data" }}
+{{ station_chart|json_script:"station-chart-data" }}
+{{ designation_chart|json_script:"designation-chart-data" }}
+{{ arrival_year_chart|json_script:"arrival-year-chart-data" }}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const isDarkMode =
+        document.documentElement.getAttribute("data-bs-theme") === "dark" ||
+        document.body.classList.contains("dark-mode");
+
+    const textColor = isDarkMode ? "#e5e7eb" : "#64748b";
+    const gridColor = isDarkMode
+        ? "rgba(255,255,255,.08)"
+        : "rgba(100,116,139,.12)";
+
+    function getChartData(id) {
+        const element = document.getElementById(id);
+
+        if (!element) return { labels: [], data: [] };
+
+        try {
+            return JSON.parse(element.textContent);
+        } catch (error) {
+            console.error("Unable to read chart data:", id, error);
+            return { labels: [], data: [] };
+        }
+    }
+
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: textColor,
+                    usePointStyle: true,
+                    padding: 18
+                }
+            }
+        }
+    };
+
+    function createDoughnut(id, dataId) {
+        const data = getChartData(dataId);
+        const canvas = document.getElementById(id);
+
+        if (!canvas || !data.labels.length) return;
+
+        new Chart(canvas, {
+            type: "doughnut",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.data,
+                    borderWidth: 2,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                ...commonOptions,
+                cutout: "65%"
+            }
+        });
+    }
+
+    function createBar(id, dataId, horizontal = false) {
+        const data = getChartData(dataId);
+        const canvas = document.getElementById(id);
+
+        if (!canvas || !data.labels.length) return;
+
+        new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "Employees",
+                    data: data.data,
+                    borderRadius: 6,
+                    maxBarThickness: 38
+                }]
+            },
+            options: {
+                ...commonOptions,
+                indexAxis: horizontal ? "y" : "x",
+                plugins: {
+                    ...commonOptions.plugins,
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: { color: textColor }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: { color: textColor }
+                    }
+                }
+            }
+        });
+    }
+
+    function createLine(id, dataId) {
+        const data = getChartData(dataId);
+        const canvas = document.getElementById(id);
+
+        if (!canvas || !data.labels.length) return;
+
+        new Chart(canvas, {
+            type: "line",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "Employee arrivals",
+                    data: data.data,
+                    tension: 0.35,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: textColor }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: { color: textColor }
+                    }
+                }
+            }
+        });
+    }
+
+    createDoughnut("genderChart", "gender-chart-data");
+    createDoughnut("appointmentChart", "appointment-chart-data");
+    createDoughnut("jobGroupChart", "job-group-chart-data");
+    createDoughnut("ethnicityChart", "ethnicity-chart-data");
+
+    createBar("stationChart", "station-chart-data", true);
+    createBar("designationChart", "designation-chart-data", true);
+
+    createLine("arrivalYearChart", "arrival-year-chart-data");
+
+});
+</script>
+{% endblock %}

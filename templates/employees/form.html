@@ -1,0 +1,230 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Workforce Insights{% endblock %}
+
+{% block content %}
+
+<div class="page-heading">
+    <div>
+        <div class="small mb-2">
+            <a href="{% url 'employee_list' %}" class="text-decoration-none text-muted">
+                <i class="bi bi-arrow-left me-1"></i>
+                Employee directory
+            </a>
+        </div>
+
+        <h1>{{ title }}</h1>
+        <p class="mb-0">
+            Enter and maintain accurate employee information.
+        </p>
+    </div>
+
+    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-lg me-1"></i>
+        Cancel
+    </a>
+</div>
+
+<div class="content-card">
+
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <div class="rounded-3 bg-success-subtle text-success p-3">
+            <i class="bi bi-person-vcard fs-4"></i>
+        </div>
+
+        <div>
+            <h5 class="mb-1">Employee information</h5>
+            <p class="small text-muted mb-0">
+                Fields marked with <span class="text-danger">*</span> are required.
+            </p>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            <div class="fw-semibold mb-1">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Please correct the following errors:
+            </div>
+
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Employee identification -->
+        <div class="mb-4">
+
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-person-badge text-success me-2"></i>
+                Employee identification
+            </h6>
+
+            <div class="row g-3">
+
+                {% for field in form %}
+                    {% if field.name == "employee_number" or field.name == "serial_number" or field.name == "full_name" %}
+                        <div class="col-12 col-md-6">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Employment details -->
+        <div class="mb-4">
+
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-briefcase text-success me-2"></i>
+                Employment details
+            </h6>
+
+            <div class="row g-3">
+
+                {% for field in form %}
+                    {% if field.name == "gender" or field.name == "designation" or field.name == "job_group" or field.name == "appointment_type" or field.name == "date_of_arrival" or field.name == "contract_period" or field.name == "station" or field.name == "status" %}
+                        <div class="col-12 col-md-6">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Contact and additional information -->
+        <div class="mb-4">
+
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-card-text text-success me-2"></i>
+                Contact and additional information
+            </h6>
+
+            <div class="row g-3">
+
+                {% for field in form %}
+                    {% if field.name == "phone_number" or field.name == "ethnicity" %}
+                        <div class="col-12 col-md-6">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% for field in form %}
+                    {% if field.name == "remark" %}
+                        <div class="col-12">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Form actions -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+            <span class="small text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                Please verify the information before saving.
+            </span>
+
+            <div class="d-flex flex-wrap gap-2">
+
+                <a href="{% url 'employee_list' %}" class="btn btn-light border">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-lg me-1"></i>
+
+                    {% if employee %}
+                        Save changes
+                    {% else %}
+                        Add employee
+                    {% endif %}
+                </button>
+
+            </div>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}

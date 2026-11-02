@@ -1,0 +1,56 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <h2>Import History</h2>
+    <p class="text-muted">Previously uploaded employee spreadsheets.</p>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Date uploaded</th>
+                            <th>Records</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                            <th>Skipped</th>
+                            <th>Rejected</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for batch in batches %}
+                        <tr>
+                            <td>{{ batch.filename }}</td>
+                            <td>{{ batch.uploaded_at|date:"d M Y H:i" }}</td>
+                            <td>{{ batch.total_rows }}</td>
+                            <td>{{ batch.created_count }}</td>
+                            <td>{{ batch.updated_count }}</td>
+                            <td>{{ batch.skipped_count }}</td>
+                            <td>{{ batch.rejected_count }}</td>
+                            <td>{{ batch.get_status_display }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                No imports yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

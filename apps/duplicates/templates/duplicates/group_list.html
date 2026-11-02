@@ -1,0 +1,247 @@
+
+{% extends "base.html" %}
+
+{% block title %}Duplicate Groups | Workforce Insights{% endblock %}
+
+{% block header_title %}Duplicate Management{% endblock %}
+{% block header_subtitle %}Review and manage potentially duplicated employee records{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-collection text-success me-2"></i>
+                Duplicate Groups
+            </h3>
+            <p class="text-muted mb-0">
+                Inspect matching employee records and make informed decisions.
+            </p>
+        </div>
+
+        <a href="{% url 'duplicates:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Overview
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get">
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-semibold">Search employees or groups</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="search"
+                                   name="q"
+                                   class="form-control"
+                                   placeholder="Name, employee number, designation..."
+                                   value="{{ search_query }}">
+                        </div>
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold">Review status</label>
+                        <select name="status" class="form-select">
+                            <option value="open" {% if selected_status == "open" %}selected{% endif %}>Awaiting review</option>
+                            <option value="resolved" {% if selected_status == "resolved" %}selected{% endif %}>Resolved</option>
+                            <option value="dismissed" {% if selected_status == "dismissed" %}selected{% endif %}>Not duplicates</option>
+                            <option value="all" {% if selected_status == "all" %}selected{% endif %}>All groups</option>
+                        </select>
+                    </div>
+
+                    <div class="col-6 col-md-2">
+                        <label class="form-label fw-semibold">Matching rule</label>
+                        <select name="match_type" class="form-select">
+                            <option value="">All rules</option>
+                            {% for value, label in match_types %}
+                                <option value="{{ value }}" {% if selected_match_type == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-success flex-grow-1">
+                            <i class="bi bi-funnel me-1"></i>Filter
+                        </button>
+                        <a href="{% url 'duplicates:group_list' %}"
+                           class="btn btn-outline-secondary"
+                           title="Clear filters">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results summary -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <span class="fw-semibold">{{ page_obj.paginator.count }}</span>
+            <span class="text-muted">groups found</span>
+        </div>
+        <div class="text-muted small">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+    </div>
+
+    <!-- Group cards -->
+    <div class="row g-3">
+
+        {% for group in groups %}
+        <div class="col-12 col-xl-6">
+
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <span class="text-muted small">Duplicate group</span>
+                            <h5 class="fw-bold mb-1">#{{ group.pk }}</h5>
+                            <span class="text-muted small">
+                                Detected {{ group.created_at|date:"d M Y, H:i" }}
+                            </span>
+                        </div>
+
+                        {% if group.status == "open" %}
+                            <span class="badge bg-warning text-dark">Awaiting review</span>
+                        {% elif group.status == "resolved" %}
+                            <span class="badge bg-success">Resolved</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Not duplicates</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {% if group.match_type == "name_details" %}
+                            <span class="badge bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Name + Designation + Station
+                            </span>
+                        {% elif group.match_type == "similar_name" %}
+                            <span class="badge bg-warning bg-opacity-10 text-dark">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                Name only
+                            </span>
+                        {% else %}
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                {{ group.get_match_type_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-muted small mb-3">
+                        {{ group.description }}
+                    </p>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="bg-light rounded-3 p-3 h-100">
+                                <div class="text-muted small">Employee records</div>
+                                <div class="fs-4 fw-bold">{{ group.candidate_count }}</div>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="bg-light rounded-3 p-3 h-100">
+                                <div class="text-muted small">Detection confidence</div>
+                                <div class="fs-4 fw-bold">{{ group.confidence }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if group.match_type == "similar_name" %}
+                        <div class="alert alert-warning py-2 small mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            A matching name alone does not establish that these records belong to the same person.
+                        </div>
+                    {% elif group.match_type == "name_details" %}
+                        <div class="alert alert-success py-2 small mb-3">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Three employee attributes match. Manual verification is still required.
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                        <span class="text-muted small">
+                            Group #{{ group.pk }}
+                        </span>
+
+                        <a href="{% url 'duplicates:group_detail' group.pk %}"
+                           class="btn btn-success btn-sm">
+                            <i class="bi bi-eye me-1"></i>
+                            {% if group.status == "open" %}Review group{% else %}View decision{% endif %}
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-search text-muted fs-1"></i>
+                    <h5 class="fw-bold mt-3">No duplicate groups found</h5>
+                    <p class="text-muted mb-0">
+                        Try changing your search terms or filters.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4" aria-label="Duplicate group pagination">
+        <ul class="pagination justify-content-center flex-wrap">
+
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ page_obj.previous_page_number }}&status={{ selected_status }}&match_type={{ selected_match_type|urlencode }}&q={{ search_query|urlencode }}">
+                        Previous
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Previous</span>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ page_obj.next_page_number }}&status={{ selected_status }}&match_type={{ selected_match_type|urlencode }}&q={{ search_query|urlencode }}">
+                        Next
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Next</span>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

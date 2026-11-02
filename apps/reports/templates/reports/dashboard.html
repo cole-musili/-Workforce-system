@@ -1,0 +1,1953 @@
+{% extends "base.html" %}
+
+{% block title %}Workforce Reports{% endblock %}
+
+{% block header_title %}Workforce Reports{% endblock %}
+
+{% block header_subtitle %}Management reporting, workforce composition and data quality{% endblock %}
+
+{% block extra_css %}
+
+<style>
+
+    .report-page {
+
+        min-width: 0;
+
+        --report-green: #16734b;
+
+        --report-dark: #104b35;
+
+        --report-light: #e9f5ee;
+
+        --report-muted: #718096;
+
+        --report-border: #e5ebe7;
+
+    }
+
+    .report-page .report-card,
+
+    .report-page .filter-panel {
+
+        background: var(--bs-body-bg, #fff);
+
+        border: 1px solid var(--bs-border-color, #e2e8e3);
+
+        border-radius: 15px;
+
+    }
+
+    .report-page .report-card {
+
+        padding: 18px;
+
+        height: 100%;
+
+        transition: transform .2s ease, box-shadow .2s ease;
+
+    }
+
+    .report-page .report-card:hover {
+
+        transform: translateY(-2px);
+
+        box-shadow: 0 8px 24px rgba(16, 75, 53, .07);
+
+    }
+
+    .report-heading {
+
+        font-weight: 750;
+
+        letter-spacing: -.035em;
+
+    }
+
+    .report-subtitle {
+
+        color: var(--bs-secondary-color);
+
+        font-size: .86rem;
+
+    }
+
+    .report-actions .btn {
+
+        border-radius: 9px;
+
+        font-weight: 600;
+
+    }
+
+    .report-hero {
+
+        background: linear-gradient(120deg, #104b35, #16734b);
+
+        border-radius: 17px;
+
+        color: #fff;
+
+        padding: 23px;
+
+        position: relative;
+
+        overflow: hidden;
+
+    }
+
+    .report-hero::after {
+
+        content: "";
+
+        position: absolute;
+
+        width: 230px;
+
+        height: 230px;
+
+        border: 35px solid rgba(255,255,255,.07);
+
+        border-radius: 50%;
+
+        right: -65px;
+
+        top: -110px;
+
+        pointer-events: none;
+
+    }
+
+    .hero-label {
+
+        color: rgba(255,255,255,.72);
+
+        font-size: .8rem;
+
+        font-weight: 600;
+
+        text-transform: uppercase;
+
+        letter-spacing: .08em;
+
+    }
+
+    .hero-number {
+
+        font-size: clamp(2.1rem, 5vw, 3rem);
+
+        line-height: 1.15;
+
+        font-weight: 800;
+
+        letter-spacing: -.05em;
+
+    }
+
+    .hero-detail {
+
+        color: rgba(255,255,255,.78);
+
+        font-size: .85rem;
+
+    }
+
+    .report-icon {
+
+        width: 43px;
+
+        height: 43px;
+
+        flex: 0 0 43px;
+
+        display: inline-flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        border-radius: 12px;
+
+        background: var(--report-light);
+
+        color: var(--report-green);
+
+        font-size: 1.2rem;
+
+    }
+
+    .report-number {
+
+        font-size: clamp(1.55rem, 3vw, 2rem);
+
+        line-height: 1.2;
+
+        font-weight: 800;
+
+        letter-spacing: -.04em;
+
+    }
+
+    .report-label {
+
+        color: var(--bs-secondary-color);
+
+        font-size: .83rem;
+
+    }
+
+    .report-section-title {
+
+        font-size: .98rem;
+
+        font-weight: 750;
+
+        margin: 0;
+
+    }
+
+    .report-section-description {
+
+        color: var(--bs-secondary-color);
+
+        font-size: .78rem;
+
+        margin-top: 4px;
+
+    }
+
+    .filter-panel {
+
+        padding: 19px;
+
+    }
+
+    .filter-panel .form-label {
+
+        font-size: .78rem;
+
+        font-weight: 700;
+
+        color: var(--bs-secondary-color);
+
+        margin-bottom: 6px;
+
+    }
+
+    .filter-panel .form-select {
+
+        border-radius: 9px;
+
+        min-height: 39px;
+
+        font-size: .85rem;
+
+    }
+
+    .filter-panel .form-select:focus {
+
+        border-color: var(--report-green);
+
+        box-shadow: 0 0 0 .2rem rgba(22,115,75,.12);
+
+    }
+
+    .filter-indicator {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        font-size: .75rem;
+
+        color: var(--report-green);
+
+        background: var(--report-light);
+
+        border-radius: 20px;
+
+        padding: 5px 10px;
+
+        font-weight: 650;
+
+    }
+
+    .report-builder-form .form-label {
+
+        font-size: .78rem;
+
+        font-weight: 700;
+
+        color: var(--bs-secondary-color);
+
+        margin-bottom: 6px;
+
+    }
+
+    .report-builder-form .form-select,
+
+    .report-builder-form .form-control {
+
+        min-height: 42px;
+
+        border-radius: 9px;
+
+        font-size: .88rem;
+
+    }
+
+    .report-builder-form .form-select:focus,
+
+    .report-builder-form .form-control:focus {
+
+        border-color: var(--report-green);
+
+        box-shadow: 0 0 0 .2rem rgba(22,115,75,.12);
+
+    }
+
+    .report-builder-form .form-text {
+
+        font-size: .72rem;
+
+    }
+
+.report-table {
+
+        font-size: .84rem;
+
+        margin-bottom: 0;
+
+    }
+
+    .report-table th {
+
+        white-space: nowrap;
+
+        color: var(--bs-secondary-color);
+
+        font-size: .71rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: .045em;
+
+        font-weight: 750;
+
+        background: rgba(120,130,125,.045);
+
+        padding: 11px 12px;
+
+    }
+
+    .report-table td {
+
+        padding: 11px 12px;
+
+        vertical-align: middle;
+
+    }
+
+    .report-table tbody tr:last-child td {
+
+        border-bottom: 0;
+
+    }
+
+    .distribution-row {
+
+        margin-bottom: 15px;
+
+    }
+
+    .distribution-row:last-child {
+
+        margin-bottom: 0;
+
+    }
+
+    .distribution-track {
+
+        height: 7px;
+
+        background: #edf1ee;
+
+        border-radius: 10px;
+
+        overflow: hidden;
+
+        margin-top: 7px;
+
+    }
+
+    .distribution-fill {
+
+        height: 100%;
+
+        background: linear-gradient(90deg, #16734b, #49a879);
+
+        border-radius: 10px;
+
+        min-width: 2px;
+
+    }
+
+    .distribution-label {
+
+        font-size: .83rem;
+
+        font-weight: 650;
+
+        overflow-wrap: anywhere;
+
+    }
+
+    .distribution-count {
+
+        font-size: .82rem;
+
+        font-weight: 750;
+
+        white-space: nowrap;
+
+    }
+
+    .quality-number {
+
+        font-weight: 750;
+
+        font-size: .83rem;
+
+    }
+
+    .quality-progress {
+
+        height: 6px;
+
+        background: #edf1ee;
+
+        border-radius: 10px;
+
+        overflow: hidden;
+
+        margin-top: 7px;
+
+    }
+
+    .quality-progress > div {
+
+        height: 100%;
+
+        background: #d69e36;
+
+        border-radius: 10px;
+
+    }
+
+    .quality-complete {
+
+        color: #16804e;
+
+        background: #e8f5ed;
+
+        padding: 4px 9px;
+
+        border-radius: 20px;
+
+        font-size: .72rem;
+
+        font-weight: 700;
+
+    }
+
+    .quality-incomplete {
+
+        color: #98651b;
+
+        background: #fff3d8;
+
+        padding: 4px 9px;
+
+        border-radius: 20px;
+
+        font-size: .72rem;
+
+        font-weight: 700;
+
+    }
+
+    .section-divider {
+
+        border-top: 1px solid var(--report-border);
+
+        margin: 18px 0;
+
+    }
+
+    .employee-name {
+
+        font-weight: 700;
+
+    }
+
+    .employee-meta {
+
+        color: var(--bs-secondary-color);
+
+        font-size: .74rem;
+
+    }
+
+    .empty-state {
+
+        padding: 25px 12px;
+
+        text-align: center;
+
+        color: var(--bs-secondary-color);
+
+        font-size: .84rem;
+
+    }
+
+    .empty-state i {
+
+        display: block;
+
+        font-size: 1.5rem;
+
+        margin-bottom: 8px;
+
+        opacity: .55;
+
+    }
+
+    .report-footer {
+
+        color: var(--bs-secondary-color);
+
+        font-size: .75rem;
+
+        padding: 8px 2px 18px;
+
+    }
+
+    @media (max-width: 767.98px) {
+
+        .report-hero {
+
+            padding: 18px;
+
+        }
+
+        .report-page .report-card {
+
+            padding: 14px;
+
+        }
+
+        .report-actions {
+
+            width: 100%;
+
+        }
+
+        .report-actions .btn {
+
+            flex: 1;
+
+            min-width: 0;
+
+            font-size: .78rem;
+
+        }
+
+        .filter-panel {
+
+            padding: 14px;
+
+        }
+
+        .mobile-table-scroll {
+
+            margin: 0 -5px;
+
+        }
+
+    }
+
+    @media print {
+
+        @page {
+
+            size: landscape;
+
+            margin: 12mm;
+
+        }
+
+        body {
+
+            background: white !important;
+
+            color: #222 !important;
+
+        }
+
+        .sidebar,
+
+        .filter-panel,
+
+        .report-actions,
+
+        nav,
+
+        .no-print {
+
+            display: none !important;
+
+        }
+
+        .report-page {
+
+            width: 100%;
+
+        }
+
+        .report-card,
+
+        .report-hero {
+
+            break-inside: avoid;
+
+            box-shadow: none !important;
+
+            border: 1px solid #ddd !important;
+
+        }
+
+        .report-hero {
+
+            background: #145a40 !important;
+
+            print-color-adjust: exact;
+
+            -webkit-print-color-adjust: exact;
+
+        }
+
+        .report-card:hover {
+
+            transform: none;
+
+        }
+
+        .report-table {
+
+            font-size: 9pt;
+
+        }
+
+        .report-section-title {
+
+            break-after: avoid;
+
+        }
+
+    }
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="report-page">
+
+    <!-- HEADER -->
+
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+
+        <div>
+
+            <div class="d-flex align-items-center gap-2 mb-1">
+
+                <span class="badge text-bg-success">REPORTING CENTRE</span>
+
+                <span class="text-muted small">Management insights</span>
+
+            </div>
+
+            <h4 class="report-heading mb-1">Workforce overview</h4>
+
+            <p class="report-subtitle mb-0">
+
+                Explore workforce composition, establishment and employee records.
+
+            </p>
+
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 report-actions no-print">
+
+            <a href="{% url 'reports:export_excel' %}?{{ request.GET.urlencode }}"
+
+               class="btn btn-success btn-sm">
+
+                <i class="bi bi-file-earmark-excel me-1"></i>
+
+                Export Excel
+
+            </a>
+
+            <button type="button"
+
+                    class="btn btn-outline-secondary btn-sm"
+
+                    onclick="window\.print()">
+
+                <i class="bi bi-file-earmark-pdf me-1"></i>
+
+                Print / Save PDF
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN WORKFORCE SUMMARY -->
+
+    <div class="report-hero mb-4">
+
+        <div class="row align-items-center g-3">
+
+            <div class="col-12 col-md-7">
+
+                <div class="hero-label mb-2">Employees matching your report</div>
+
+                <div class="hero-number">
+
+                    {{ total_employees|default:0 }}
+
+                </div>
+
+                <div class="hero-detail mt-2">
+
+                    {% if filters.employee_state == "archived" %}
+
+                        Archived employee records
+
+                    {% elif filters.employee_state == "all" %}
+
+                        Active and archived employee records
+
+                    {% else %}
+
+                        Active employee records
+
+                    {% endif %}
+
+                    <span class="mx-1">·</span>
+
+                    Based on current filters
+
+                </div>
+
+            </div>
+
+            <div class="col-12 col-md-5">
+
+                <div class="row g-2">
+
+                    <div class="col-6">
+
+                        <div class="hero-label">Female</div>
+
+                        <div class="fs-3 fw-bold">{{ female_count|default:0 }}</div>
+
+                    </div>
+
+                    <div class="col-6">
+
+                        <div class="hero-label">Male</div>
+
+                        <div class="fs-3 fw-bold">{{ male_count|default:0 }}</div>
+
+                    </div>
+
+                    <div class="col-6">
+
+                        <div class="hero-label">With arrival date</div>
+
+                        <div class="fs-5 fw-bold">{{ with_arrival_date|default:0 }}</div>
+
+                    </div>
+
+                    <div class="col-6">
+
+                        <div class="hero-label">Missing arrival date</div>
+
+                        <div class="fs-5 fw-bold">{{ without_arrival_date|default:0 }}</div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
+
+    <div class="filter-panel mb-4 no-print">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+
+            <div class="d-flex align-items-center gap-2">
+
+                <span class="report-icon">
+
+                    <i class="bi bi-sliders"></i>
+
+                </span>
+
+                <div>
+
+                    <h6 class="report-section-title">Build your report</h6>
+
+                    <div class="report-section-description">
+
+                        Select the employee records you want to analyse or export.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <span class="filter-indicator">
+
+                <i class="bi bi-funnel-fill"></i>
+
+                Filters apply to the entire report
+
+            </span>
+
+        </div>
+
+        <form method="get" action="{% url 'reports:dashboard' %}">
+
+            <div class="row g-3">
+
+                <div class="col-12 col-sm-6 col-lg">
+
+                    <label class="form-label">Employee state</label>
+
+                    <select name="employee_state" class="form-select">
+
+                        <option value="active" {% if filters.employee_state == "active" %}selected{% endif %}>Active employees</option>
+
+                        <option value="archived" {% if filters.employee_state == "archived" %}selected{% endif %}>Archived employees</option>
+
+                        <option value="all" {% if filters.employee_state == "all" %}selected{% endif %}>All employees</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg">
+
+                    <label class="form-label">Station</label>
+
+                    <select name="station" class="form-select">
+
+                        <option value="">All stations</option>
+
+                        {% for value in station_choices %}
+
+                        <option value="{{ value }}" {% if filters.station == value %}selected{% endif %}>
+
+                            {{ value }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg">
+
+                    <label class="form-label">Appointment</label>
+
+                    <select name="appointment_type" class="form-select">
+
+                        <option value="">All appointments</option>
+
+                        {% for value in appointment_choices %}
+
+                        <option value="{{ value }}" {% if filters.appointment_type == value %}selected{% endif %}>
+
+                            {{ value }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg">
+
+                    <label class="form-label">Job group</label>
+
+                    <select name="job_group" class="form-select">
+
+                        <option value="">All job groups</option>
+
+                        {% for value in job_group_choices %}
+
+                        <option value="{{ value }}" {% if filters.job_group == value %}selected{% endif %}>
+
+                            {{ value }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg">
+
+                    <label class="form-label">Status</label>
+
+                    <select name="status" class="form-select">
+
+                        <option value="">All statuses</option>
+
+                        {% for value in status_choices %}
+
+                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
+
+                            {{ value }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 d-flex flex-wrap align-items-center gap-2 mt-3">
+
+                    <button type="submit" class="btn btn-success px-4">
+
+                        <i class="bi bi-funnel me-1"></i>
+
+                        Generate report
+
+                    </button>
+
+                    <a href="{% url 'reports:dashboard' %}"
+
+                       class="btn btn-outline-secondary">
+
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+
+                        Clear filters
+
+                    </a>
+
+                    <span class="small text-muted ms-md-auto">
+
+                        <i class="bi bi-info-circle me-1"></i>
+
+                        Export buttons use these same filters.
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- REPORT BUILDER -->
+
+    <section class="report-card mb-4 no-print" aria-labelledby="report-builder-title">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+
+            <div class="d-flex align-items-center gap-2">
+
+                <span class="report-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
+
+                <div>
+
+                    <h6 class="report-section-title" id="report-builder-title">Report builder</h6>
+
+                    <p class="report-section-description mb-0">
+
+                        Choose a report and export the filtered records in Excel or PDF.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <span class="filter-indicator">
+
+                <i class="bi bi-check2-circle"></i>
+
+                Current filters will be retained
+
+            </span>
+
+        </div>
+
+        <form method="get" class="report-builder-form">
+
+            {% for key, value in request.GET.items %}
+
+                {% if key != "report_type" and key != "arrival_year" %}
+
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+
+                {% endif %}
+
+            {% endfor %}
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-12 col-md-6 col-lg-5">
+
+                    <label for="reportType" class="form-label">Report type</label>
+
+                    <select class="form-select" id="reportType" name="report_type" required>
+
+                        {% for value, label in report_types %}
+
+                            <option value="{{ value }}"
+
+                                {% if request.GET.report_type == value %}selected{% endif %}>
+
+                                {{ label }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <div class="form-text">Select the records and analysis to include.</div>
+
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3" id="arrivalYearField">
+
+                    <label for="arrivalYear" class="form-label">Arrival year</label>
+
+                    <input type="number" class="form-control" id="arrivalYear"
+
+                           name="arrival_year" min="2000" max="2100"
+
+                           value="{{ request.GET.arrival_year|default:current_year }}">
+
+                    <div class="form-text">Applies to the new employees report.</div>
+
+                </div>
+
+                <div class="col-12 col-lg-4">
+
+                    <div class="d-flex flex-wrap gap-2 report-actions">
+
+                        <button type="submit" formaction="{% url 'reports:export_excel' %}"
+
+                                class="btn btn-success flex-grow-1">
+
+                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+
+                        </button>
+
+                        <button type="submit" formaction="{% url 'reports:export_pdf' %}"
+
+                                class="btn btn-outline-success flex-grow-1">
+
+                            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </section>
+
+<!-- KPI CARDS -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-xl-3">
+
+            <div class="report-card">
+
+                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                    <span class="report-icon"><i class="bi bi-people"></i></span>
+
+                    <span class="text-success small fw-semibold">Total</span>
+
+                </div>
+
+                <div class="report-number">{{ total_employees|default:0 }}</div>
+
+                <div class="report-label mt-1">Employees in selection</div>
+
+            </div>
+
+        </div>
+
+        <div class="col-6 col-xl-3">
+
+            <div class="report-card">
+
+                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                    <span class="report-icon"><i class="bi bi-gender-female"></i></span>
+
+                    <span class="text-muted small">Female</span>
+
+                </div>
+
+                <div class="report-number">{{ female_count|default:0 }}</div>
+
+                <div class="report-label mt-1">Female employees</div>
+
+            </div>
+
+        </div>
+
+        <div class="col-6 col-xl-3">
+
+            <div class="report-card">
+
+                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                    <span class="report-icon"><i class="bi bi-gender-male"></i></span>
+
+                    <span class="text-muted small">Male</span>
+
+                </div>
+
+                <div class="report-number">{{ male_count|default:0 }}</div>
+
+                <div class="report-label mt-1">Male employees</div>
+
+            </div>
+
+        </div>
+
+        <div class="col-6 col-xl-3">
+
+            <div class="report-card">
+
+                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                    <span class="report-icon"><i class="bi bi-calendar-check"></i></span>
+
+                    <span class="text-success small fw-semibold">Arrival</span>
+
+                </div>
+
+                <div class="report-number">{{ with_arrival_date|default:0 }}</div>
+
+                <div class="report-label mt-1">Employees with arrival date</div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- WORKFORCE DISTRIBUTIONS -->
+
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+
+        <div>
+
+            <h5 class="report-heading mb-1">Workforce composition</h5>
+
+            <p class="report-subtitle mb-0">
+
+                Understand how employees are distributed across the organisation.
+
+            </p>
+
+        </div>
+
+        <span class="small text-muted">Based on selected employees</span>
+
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <!-- Station -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-building"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Employees by station</h6>
+
+                        <div class="report-section-description">Organisational distribution</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_station %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.station|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-building"></i>
+
+                    No station information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Designation -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-briefcase"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Employees by designation</h6>
+
+                        <div class="report-section-description">Positions and roles</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_designation %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.designation|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-briefcase"></i>
+
+                    No designation information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Job group -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-diagram-3"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Employees by job group</h6>
+
+                        <div class="report-section-description">Workforce grading</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_job_group %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.job_group|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    No job group information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Appointment -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-person-workspace"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Appointment types</h6>
+
+                        <div class="report-section-description">Employment arrangements</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_appointment %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.appointment_type|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-person-workspace"></i>
+
+                    No appointment information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Contract -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-hourglass-split"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Contract periods</h6>
+
+                        <div class="report-section-description">Contract duration distribution</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_contract %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.contract_period|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-hourglass-split"></i>
+
+                    No contract information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Gender -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-people"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Gender distribution</h6>
+
+                        <div class="report-section-description">Workforce demographics</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_gender %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.gender|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-people"></i>
+
+                    No gender information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Ethnicity -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-globe"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Ethnicity distribution</h6>
+
+                        <div class="report-section-description">Recorded demographic categories</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_ethnicity %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.ethnicity|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-globe"></i>
+
+                    No ethnicity information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Status -->
+
+        <div class="col-12 col-lg-6">
+
+            <div class="report-card">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <span class="report-icon"><i class="bi bi-check-circle"></i></span>
+
+                    <div>
+
+                        <h6 class="report-section-title">Employee status</h6>
+
+                        <div class="report-section-description">Recorded employment status</div>
+
+                    </div>
+
+                </div>
+
+                {% for item in by_status %}
+
+                <div class="distribution-row">
+
+                    <div class="d-flex justify-content-between gap-2">
+
+                        <span class="distribution-label">{{ item.status|default:"Not stated" }}</span>
+
+                        <span class="distribution-count">{{ item.total }}</span>
+
+                    </div>
+
+                    <div class="distribution-track">
+
+                        <div class="distribution-fill"
+
+                             style="width: {% widthratio item.total total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="empty-state">
+
+                    <i class="bi bi-check-circle"></i>
+
+                    No status information available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- DATA QUALITY -->
+
+    <div class="report-card mb-4">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+
+            <div class="d-flex align-items-center gap-2">
+
+                <span class="report-icon"><i class="bi bi-shield-check"></i></span>
+
+                <div>
+
+                    <h6 class="report-section-title">Data quality assessment</h6>
+
+                    <div class="report-section-description">
+
+                        Missing employee information in the selected records.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <span class="badge text-bg-light border">
+
+                {{ total_employees }} employees assessed
+
+            </span>
+
+        </div>
+
+        <div class="row g-3">
+
+            {% for item in missing_data %}
+
+            <div class="col-12 col-sm-6 col-lg-4">
+
+                <div class="p-3 rounded-3 border h-100">
+
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+
+                        <span class="small fw-semibold">{{ item.label }}</span>
+
+                        {% if item.count %}
+
+                        <span class="quality-incomplete">{{ item.count }} missing</span>
+
+                        {% else %}
+
+                        <span class="quality-complete">
+
+                            <i class="bi bi-check2 me-1"></i>Complete
+
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="quality-progress">
+
+                        <div style="width: {% widthratio item.count total_employees 100 %}%"></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    <!-- EMPLOYEE REGISTER -->
+
+    <div class="report-card mb-4">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+
+            <div class="d-flex align-items-center gap-2">
+
+                <span class="report-icon"><i class="bi bi-card-list"></i></span>
+
+                <div>
+
+                    <h6 class="report-section-title">Employee register preview</h6>
+
+                    <div class="report-section-description">
+
+                        A sample of employee records matching your report filters.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <span class="badge text-bg-success">
+
+                {{ total_employees }} matching records
+
+            </span>
+
+        </div>
+
+        <div class="table-responsive mobile-table-scroll">
+
+            <table class="table table-hover report-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>P/No.</th>
+
+                        <th>Employee</th>
+
+                        <th>Designation</th>
+
+                        <th>Station</th>
+
+                        <th>Job group</th>
+
+                        <th>Appointment</th>
+
+                        <th>Arrival date</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for employee in recent_employees %}
+
+                    <tr>
+
+                        <td class="fw-semibold">
+
+                            {{ employee.employee_number|default:"—" }}
+
+                        </td>
+
+                        <td>
+
+                            <div class="employee-name">{{ employee.full_name }}</div>
+
+                            <div class="employee-meta">{{ employee.gender|default:"Gender not stated" }}</div>
+
+                        </td>
+
+                        <td>{{ employee.designation|default:"—" }}</td>
+
+                        <td>{{ employee.station|default:"—" }}</td>
+
+                        <td>{{ employee.job_group|default:"—" }}</td>
+
+                        <td>{{ employee.appointment_type|default:"—" }}</td>
+
+                        <td class="text-nowrap">
+
+                            {{ employee.date_of_arrival|date:"d M Y"|default:"—" }}
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="7">
+
+                            <div class="empty-state">
+
+                                <i class="bi bi-person-x"></i>
+
+                                No employee records match the selected filters.
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% if total_employees > 15 %}
+
+        <div class="section-divider"></div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+
+            <small class="text-muted">
+
+                Showing the latest 15 records out of {{ total_employees }} matching employees.
+
+            </small>
+
+            <a href="{% url 'reports:export_excel' %}?{{ request.GET.urlencode }}"
+
+               class="btn btn-outline-success btn-sm">
+
+                <i class="bi bi-download me-1"></i>
+
+                Export complete register
+
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- FOOTER -->
+
+    <div class="report-footer d-flex flex-wrap justify-content-between gap-2">
+
+        <span>
+
+            <i class="bi bi-bar-chart-line me-1"></i>
+
+            Workforce Insights · Management Reports
+
+        </span>
+
+        <span>Report data reflects the selected filters.</span>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const reportType = document.getElementById("reportType");
+
+    const arrivalYearField = document.getElementById("arrivalYearField");
+
+    const arrivalYearInput = document.getElementById("arrivalYear");
+
+    if (!reportType || !arrivalYearField || !arrivalYearInput) return;
+
+    function updateArrivalYearVisibility() {
+
+        const isNewEmployees = reportType.value === "new_employees";
+
+        arrivalYearField.classList.toggle("d-none", !isNewEmployees);
+
+        arrivalYearInput.disabled = !isNewEmployees;
+
+    }
+
+    reportType.addEventListener("change", updateArrivalYearVisibility);
+
+    updateArrivalYearVisibility();
+
+});
+
+</script>
+
+{% endblock %}

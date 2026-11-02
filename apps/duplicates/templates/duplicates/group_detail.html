@@ -1,0 +1,571 @@
+
+{% extends "base.html" %}
+
+{% block title %}Review Duplicate Group | Workforce Insights{% endblock %}
+{% block header_title %}Duplicate Management{% endblock %}
+{% block header_subtitle %}Compare, edit and manage employee records{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{% url 'duplicates:group_list' %}"
+               class="text-muted small d-inline-block mb-2">
+                <i class="bi bi-arrow-left me-1"></i> Back to duplicate groups
+            </a>
+
+            <h3 class="fw-bold mb-1">Duplicate Group #{{ group.pk }}</h3>
+            <p class="text-muted mb-0">
+                Compare employee records before making a decision.
+            </p>
+        </div>
+
+        {% if group.status == "open" %}
+            <span class="badge bg-warning text-dark px-3 py-2">Awaiting review</span>
+        {% elif group.status == "resolved" %}
+            <span class="badge bg-success px-3 py-2">Resolved</span>
+        {% else %}
+            <span class="badge bg-secondary px-3 py-2">Not duplicates</span>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Detection information -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="text-muted small">Matching rule</div>
+                    <div class="fw-semibold">{{ group.get_match_type_display }}</div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="text-muted small">Detection score</div>
+                    <div class="fw-bold fs-5">{{ group.confidence }}%</div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="text-muted small">Employee records</div>
+                    <div class="fw-bold fs-5">{{ candidate_count }}</div>
+                </div>
+
+                <div class="col-12">
+                    <div class="text-muted small">Why these records were grouped</div>
+                    <p class="mb-0">{{ group.description }}</p>
+                </div>
+
+                <div class="col-12">
+                    <small class="text-muted">
+                        Detected {{ group.created_at|date:"d M Y, H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matching warning -->
+    {% if group.match_type == "similar_name" %}
+        <div class="alert alert-warning border-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Name-only match:</strong>
+            Matching names do not prove that two records belong to the same person.
+            Compare all available details and import history before deciding.
+        </div>
+    {% elif group.match_type == "name_details" %}
+        <div class="alert alert-info border-0">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            These records share a name, designation and station.
+            Manual verification is still required.
+        </div>
+    {% endif %}
+
+    <!-- Employee comparison -->
+    <div class="mb-3">
+        <h5 class="fw-bold mb-1">Employee comparison</h5>
+        <p class="text-muted small">
+            Each card represents a separate employee database record.
+        </p>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        {% for candidate in candidates %}
+            {% with employee=candidate.employee %}
+
+            <div class="col-12 col-xl-6">
+                <div class="card border-0 shadow-sm h-100">
+
+                    <div class="card-header bg-transparent py-3">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <div>
+                                <span class="text-muted small">
+                                    Database record #{{ employee.pk }}
+                                </span>
+                                <h5 class="fw-bold mb-0">{{ employee.full_name }}</h5>
+                            </div>
+
+                            {% if employee.is_archived %}
+                                <span class="badge bg-secondary">Archived</span>
+                            {% else %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    Active
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row g-3">
+
+                            <div class="col-6">
+                                <div class="text-muted small">P/No.</div>
+                                <div class="fw-semibold">
+                                    {{ employee.employee_number|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Serial number</div>
+                                <div class="fw-semibold">
+                                    {{ employee.serial_number|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Gender</div>
+                                <div class="fw-semibold">
+                                    {{ employee.gender|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Designation</div>
+                                <div class="fw-semibold">
+                                    {{ employee.designation|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Job group</div>
+                                <div class="fw-semibold">
+                                    {{ employee.job_group|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Appointment type</div>
+                                <div class="fw-semibold">
+                                    {{ employee.appointment_type|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Station</div>
+                                <div class="fw-semibold">
+                                    {{ employee.station|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Date of arrival</div>
+                                <div class="fw-semibold">
+                                    {{ employee.date_of_arrival|date:"d M Y"|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Phone number</div>
+                                <div class="fw-semibold">
+                                    {{ employee.phone_number|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="text-muted small">Ethnicity</div>
+                                <div class="fw-semibold">
+                                    {{ employee.ethnicity|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="text-muted small">Employment status</div>
+                                <div class="fw-semibold">
+                                    {{ employee.status|default:"Not provided" }}
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="text-muted small">Remark</div>
+                                <div class="fw-semibold">
+                                    {{ employee.remark|default:"No remarks" }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <hr>
+
+                        <!-- Import provenance -->
+                        <div class="mb-3">
+                            <h6 class="fw-bold">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                                Import history
+                            </h6>
+
+                            {% if candidate.source_records %}
+                                {% for source in candidate.source_records %}
+                                    <div class="border rounded-3 p-3 mb-2">
+                                        <div class="fw-semibold text-break">
+                                            {{ source.filename|default:"Unknown workbook" }}
+                                        </div>
+
+                                        <div class="small text-muted mt-2">
+                                            <div>
+                                                <i class="bi bi-table me-1"></i>
+                                                Worksheet:
+                                                <strong>{{ source.source_sheet|default:"Unknown" }}</strong>
+                                            </div>
+
+                                            <div>
+                                                <i class="bi bi-list-ol me-1"></i>
+                                                Excel row:
+                                                <strong>{{ source.source_row_number|default:"Unknown" }}</strong>
+                                            </div>
+
+                                            <div>
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                Period:
+                                                <strong>{{ source.source_period|default:"Not specified" }}</strong>
+                                            </div>
+
+                                            <div>
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Import result:
+                                                <strong>{{ source.import_result|default:"Unknown" }}</strong>
+                                            </div>
+
+                                            {% if source.uploaded_at %}
+                                                <div>
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    Uploaded:
+                                                    {{ source.uploaded_at|date:"d M Y, H:i" }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-light border small mb-0">
+                                    No import source information is available for this record.
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+
+                        <!-- Individual record actions -->
+                        <div class="d-flex flex-wrap gap-2">
+
+                            <a href="{% url 'employee_detail' employee.pk %}"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-person-lines-fill me-1"></i>
+                                View profile
+                            </a>
+
+                            {% if not employee.is_archived and group.status == "open" %}
+                                <a href="{% url 'employee_update' employee.pk %}"
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil-square me-1"></i>
+                                    Edit record
+                                </a>
+
+                                <form method="post"
+                                      action="{% url 'duplicates:archive_employee' group.pk employee.pk %}"
+                                      class="archive-employee-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-archive me-1"></i>
+                                        Archive record
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                        </div>
+
+                        <div class="small text-muted mt-3">
+                            Added {{ employee.created_at|date:"d M Y" }}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {% endwith %}
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-light border">
+                    No employee records are attached to this group.
+                </div>
+            </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Group resolution -->
+    {% if can_resolve %}
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent py-3">
+            <h5 class="fw-bold mb-1">
+                <i class="bi bi-clipboard-check text-success me-2"></i>
+                Review decision
+            </h5>
+            <p class="text-muted small mb-0">
+                Choose what should happen to the employee records in this group.
+            </p>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post"
+                  action="{% url 'duplicates:resolve' group.pk %}"
+                  id="resolutionForm">
+
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Select resolution</label>
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label class="border rounded-3 p-3 d-flex gap-3 align-items-start">
+                                <input type="radio"
+                                       class="form-check-input mt-1"
+                                       name="action"
+                                       value="archive_others"
+                                       required>
+                                <span>
+                                    <strong class="d-block">
+                                        Retain one and archive others
+                                    </strong>
+                                    <small class="text-muted">
+                                        Keep one selected employee record and archive
+                                        the remaining records in this group.
+                                    </small>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="border rounded-3 p-3 d-flex gap-3 align-items-start">
+                                <input type="radio"
+                                       class="form-check-input mt-1"
+                                       name="action"
+                                       value="keep_both"
+                                       required>
+                                <span>
+                                    <strong class="d-block">Keep all records</strong>
+                                    <small class="text-muted">
+                                        These records have been reviewed and should
+                                        remain in the employee directory.
+                                    </small>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="border rounded-3 p-3 d-flex gap-3 align-items-start">
+                                <input type="radio"
+                                       class="form-check-input mt-1"
+                                       name="action"
+                                       value="not_duplicate"
+                                       required>
+                                <span>
+                                    <strong class="d-block">Mark as not duplicates</strong>
+                                    <small class="text-muted">
+                                        These records belong to different employees.
+                                    </small>
+                                </span>
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mb-4" id="retainedEmployeeSection" hidden>
+                    <label class="form-label fw-semibold">
+                        Select the employee record to retain
+                    </label>
+
+                    <select name="retained_employee"
+                            id="retainedEmployee"
+                            class="form-select">
+                        <option value="">Choose employee to retain</option>
+
+                        {% for candidate in candidates %}
+                            {% if not candidate.employee.is_archived %}
+                                <option value="{{ candidate.employee.pk }}">
+                                    {{ candidate.employee.full_name }}
+                                    — P/No. {{ candidate.employee.employee_number|default:"Not provided" }}
+                                    — Record #{{ candidate.employee.pk }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+
+                    <div class="form-text">
+                        All other active employee records in this group will be archived.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Review notes</label>
+                    <textarea name="notes"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Explain why you made this decision..."></textarea>
+                </div>
+
+                <div class="alert alert-warning border-0 small">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Archiving changes employee records to archived status.
+                    It does not permanently delete them. Verify your selection before submitting.
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Save review decision
+                    </button>
+
+                    <a href="{% url 'duplicates:group_list' %}"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    {% endif %}
+
+    <!-- Resolution history -->
+    {% if resolutions %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Resolution history
+                </h5>
+            </div>
+
+            <div class="card-body">
+                {% for resolution in resolutions %}
+                    <div class="border-bottom py-3">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <strong>{{ resolution.get_action_display }}</strong>
+                            <small class="text-muted">
+                                {{ resolution.created_at|date:"d M Y, H:i" }}
+                            </small>
+                        </div>
+
+                        <div class="small text-muted mt-1">
+                            Reviewed by:
+                            {{ resolution.performed_by|default:"System user" }}
+                        </div>
+
+                        {% if resolution.retained_employee %}
+                            <div class="small mt-2">
+                                Retained employee:
+                                <strong>{{ resolution.retained_employee.full_name }}</strong>
+                            </div>
+                        {% endif %}
+
+                        {% if resolution.notes %}
+                            <p class="small mt-2 mb-0">{{ resolution.notes }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Confirm individual employee archiving.
+    document.querySelectorAll(".archive-employee-form").forEach(function (form) {
+        form.addEventListener("submit", function (event) {
+            const confirmed = window.confirm(
+                "Archive this employee record? It will be removed from the active directory but will not be permanently deleted."
+            );
+
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    // Group resolution controls.
+    const radios = document.querySelectorAll('input[name="action"]');
+    const retainedSection = document.getElementById("retainedEmployeeSection");
+    const retainedSelect = document.getElementById("retainedEmployee");
+    const form = document.getElementById("resolutionForm");
+
+    function updateResolutionFields() {
+        const selected = document.querySelector('input[name="action"]:checked');
+        const requiresRetainedEmployee =
+            selected && selected.value === "archive_others";
+
+        if (retainedSection) {
+            retainedSection.hidden = !requiresRetainedEmployee;
+        }
+
+        if (retainedSelect) {
+            retainedSelect.required = !!requiresRetainedEmployee;
+
+            if (!requiresRetainedEmployee) {
+                retainedSelect.value = "";
+            }
+        }
+    }
+
+    radios.forEach(function (radio) {
+        radio.addEventListener("change", updateResolutionFields);
+    });
+
+    updateResolutionFields();
+
+    form?.addEventListener("submit", function (event) {
+        const selected = document.querySelector('input[name="action"]:checked');
+
+        if (selected && selected.value === "archive_others") {
+            const confirmed = window.confirm(
+                "Are you sure? All other active employee records in this group will be archived."
+            );
+
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        }
+    });
+
+});
+</script>
+{% endblock %}

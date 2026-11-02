@@ -1,0 +1,281 @@
+
+{% extends "base.html" %}
+{% block title %}Employees | Workforce Insights{% endblock %}
+
+{% block content %}
+
+<div class="page-heading">
+    <div>
+        <h1>Employee Directory</h1>
+        <p>Manage, search and explore your workforce records.</p>
+    </div>
+
+    <a href="{% url 'employee_create' %}" class="btn btn-success">
+        <i class="bi bi-person-plus me-1"></i>
+        Add Employee
+    </a>
+</div>
+
+<!-- Search and Filters -->
+<div class="content-card mb-4">
+    <form method="get" class="row g-3">
+
+        <div class="col-12 col-lg-4">
+            <label class="form-label small fw-semibold">Search employees</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ query }}"
+                    class="form-control"
+                    placeholder="Name, P/No., designation, phone..."
+                >
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <label class="form-label small fw-semibold">Gender</label>
+            <select name="gender" class="form-select">
+                <option value="">All genders</option>
+                {% for item in genders %}
+                    <option value="{{ item }}" {% if gender == item %}selected{% endif %}>
+                        {{ item }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <label class="form-label small fw-semibold">Job group</label>
+            <select name="job_group" class="form-select">
+                <option value="">All groups</option>
+                {% for item in job_groups %}
+                    <option value="{{ item }}" {% if job_group == item %}selected{% endif %}>
+                        {{ item }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <label class="form-label small fw-semibold">Appointment</label>
+            <select name="appointment" class="form-select">
+                <option value="">All types</option>
+                {% for item in appointments %}
+                    <option value="{{ item }}" {% if appointment == item %}selected{% endif %}>
+                        {{ item }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <label class="form-label small fw-semibold">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                {% for item in statuses %}
+                    <option value="{{ item }}" {% if status == item %}selected{% endif %}>
+                        {{ item }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label small fw-semibold">Station</label>
+            <select name="station" class="form-select">
+                <option value="">All stations</option>
+                {% for item in stations %}
+                    <option value="{{ item }}" {% if station == item %}selected{% endif %}>
+                        {{ item }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-9 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-funnel me-1"></i>
+                Apply filters
+            </button>
+
+            <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                Reset
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<!-- Employee Records -->
+<div class="content-card">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h5 class="mb-1">Employee records</h5>
+            <p class="text-muted small mb-0">
+                Workforce directory and employment information
+            </p>
+        </div>
+
+        <span class="badge bg-success-subtle text-success px-3 py-2">
+            {{ page_obj.paginator.count }} employees found
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+                <tr>
+                    <th>P/No.</th>
+                    <th>Employee</th>
+                    <th>Gender</th>
+                    <th>Designation</th>
+                    <th>Job group</th>
+                    <th>Appointment</th>
+                    <th>Station</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for employee in employees %}
+                    <tr>
+                        <td>
+                            <span class="fw-semibold">
+                                {{ employee.employee_number|default:"—" }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">
+                                {{ employee.full_name }}
+                            </div>
+                            <div class="small text-muted">
+                                {{ employee.designation|default:"Employee" }}
+                            </div>
+                        </td>
+
+                        <td>{{ employee.gender|default:"—" }}</td>
+
+                        <td>{{ employee.designation|default:"—" }}</td>
+
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ employee.job_group|default:"—" }}
+                            </span>
+                        </td>
+
+                        <td>{{ employee.appointment_type|default:"—" }}</td>
+
+                        <td>{{ employee.station|default:"—" }}</td>
+
+                        <td>
+                            {% if employee.status %}
+                                <span class="badge bg-success-subtle text-success">
+                                    {{ employee.status }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a
+                                href="{% url 'employee_detail' employee.pk %}"
+                                class="btn btn-sm btn-outline-success"
+                                title="View employee"
+                            >
+                                <i class="bi bi-eye"></i>
+                                <span class="d-none d-lg-inline">View</span>
+                            </a>
+                        </td>
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="bi bi-people text-muted" style="font-size: 2.5rem;"></i>
+                            </div>
+
+                            <h6>No employee records found</h6>
+
+                            <p class="text-muted small mb-3">
+                                Try changing your search or filter criteria.
+                            </p>
+
+                            <a href="{% url 'employee_list' %}" class="btn btn-sm btn-outline-success">
+                                Clear filters
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+
+            <span class="small text-muted">
+                Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+                of {{ page_obj.paginator.count }} employees
+            </span>
+
+            <nav aria-label="Employee pagination">
+                <ul class="pagination pagination-sm mb-0">
+
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                            >
+                                Previous
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Previous</span>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+                            >
+                                Next
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

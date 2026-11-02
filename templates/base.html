@@ -1,0 +1,618 @@
+
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}Workforce Insights{% endblock %}</title>
+
+    <meta name="description"
+          content="Workforce Insights - Employee data management, workforce analytics and reporting.">
+
+    <meta name="theme-color" content="#103d2d">
+
+    <link rel="icon" type="image/svg+xml"
+          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23103d2d'/%3E%3Cpath d='M20 70V30h12l18 23 18-23h12v40H67V49L50 69 33 49v21z' fill='%23ffffff'/%3E%3Ccircle cx='81' cy='20' r='9' fill='%234ade80'/%3E%3C/svg%3E">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+
+    <style>
+        :root {
+            --wi-primary: #176b48;
+            --wi-primary-dark: #103d2d;
+            --wi-primary-light: #eaf5ef;
+            --wi-accent: #4ade80;
+            --wi-sidebar: #103d2d;
+            --wi-sidebar-hover: rgba(255,255,255,.09);
+            --wi-bg: #f4f7f5;
+            --wi-surface: #ffffff;
+            --wi-text: #172b22;
+            --wi-muted: #718078;
+            --wi-border: #e7ece8;
+            --wi-radius: 14px;
+            --wi-shadow: 0 3px 14px rgba(20,45,32,.055);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--wi-bg);
+            color: var(--wi-text);
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", sans-serif;
+            font-size: 14px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* Application layout */
+
+        .app-shell {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            min-width: 250px;
+            background: var(--wi-sidebar);
+            color: #fff;
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1040;
+            display: flex;
+            flex-direction: column;
+            padding: 25px 16px;
+            transition: transform .3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 0 9px 30px;
+            color: #fff;
+        }
+
+        .brand-icon {
+            width: 39px;
+            height: 39px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: rgba(74,222,128,.15);
+            color: var(--wi-accent);
+            font-size: 21px;
+        }
+
+        .brand-name {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -.7px;
+        }
+
+        .brand-name span {
+            color: var(--wi-accent);
+        }
+
+        .brand-caption {
+            display: block;
+            font-size: 10px;
+            color: rgba(255,255,255,.55);
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+            margin-top: 1px;
+        }
+
+        .nav-section {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,.45);
+            padding: 14px 12px 9px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,.76);
+            padding: 11px 13px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all .2s ease;
+        }
+
+        .sidebar-link i {
+            font-size: 17px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-link:hover {
+            background: var(--wi-sidebar-hover);
+            color: #fff;
+            transform: translateX(2px);
+        }
+
+        .sidebar-link.active {
+            background: rgba(74,222,128,.15);
+            color: #86efac;
+            font-weight: 700;
+            box-shadow: inset 3px 0 #4ade80;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px 10px 0;
+            border-top: 1px solid rgba(255,255,255,.12);
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: rgba(255,255,255,.65);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(74,222,128,.5);
+        }
+
+        /* Main content */
+
+        .main-content {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+            padding: 0 30px 40px;
+        }
+
+        .topbar {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            border-bottom: 1px solid var(--wi-border);
+            margin-bottom: 25px;
+        }
+
+        .topbar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--wi-text);
+        }
+
+        .topbar-subtitle {
+            font-size: 12px;
+            color: var(--wi-muted);
+            margin-top: 3px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mobile-menu-button {
+            display: none;
+            border: 1px solid var(--wi-border);
+            background: #fff;
+            border-radius: 9px;
+            width: 39px;
+            height: 39px;
+            color: var(--wi-text);
+        }
+
+        /* General components */
+
+        .card {
+            border-radius: var(--wi-radius);
+        }
+
+        .shadow-sm {
+            box-shadow: var(--wi-shadow) !important;
+        }
+
+        .btn {
+            border-radius: 9px;
+            font-weight: 500;
+            transition: all .2s ease;
+        }
+
+        .btn-success {
+            background: var(--wi-primary);
+            border-color: var(--wi-primary);
+        }
+
+        .btn-success:hover {
+            background: var(--wi-primary-dark);
+            border-color: var(--wi-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 9px;
+            min-height: 40px;
+            border-color: #dfe7e1;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #65b88a;
+            box-shadow: 0 0 0 .2rem rgba(23,107,72,.1);
+        }
+
+        .table {
+            --bs-table-bg: transparent;
+        }
+
+        .table thead th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #64756b;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            font-size: 13px;
+        }
+
+        .page-heading {
+            font-size: 24px;
+            font-weight: 750;
+            letter-spacing: -.6px;
+        }
+
+        .text-muted {
+            color: var(--wi-muted) !important;
+        }
+
+        /* Django messages */
+
+        .message-container {
+            margin-bottom: 20px;
+        }
+
+        .message-container .alert {
+            border: 0;
+            border-radius: 11px;
+            box-shadow: var(--wi-shadow);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        /* Mobile navigation */
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 1035;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 0 20px 30px;
+            }
+
+            .mobile-menu-button {
+                display: inline-grid;
+                place-items: center;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .main-content {
+                padding: 0 13px 25px;
+            }
+
+            .topbar {
+                min-height: 65px;
+                margin-bottom: 19px;
+            }
+
+            .topbar-subtitle {
+                display: none;
+            }
+
+            .page-heading {
+                font-size: 21px;
+            }
+
+            .card-body {
+                padding: 16px;
+            }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="appSidebar">
+
+        <a href="{% url 'dashboard' %}" class="sidebar-brand">
+
+            <div class="brand-icon">
+                <i class="bi bi-bar-chart-line-fill"></i>
+            </div>
+
+            <div>
+                <div class="brand-name">
+                    Workforce <span>Insights</span>
+                </div>
+                <span class="brand-caption">People analytics</span>
+            </div>
+
+        </a>
+
+        <div class="nav-section">WORKSPACE</div>
+
+        <nav class="sidebar-nav">
+
+            <!-- Main Dashboard -->
+            <a href="{% url 'dashboard' %}"
+               class="sidebar-link {% if request.path == '/' %}active{% endif %}">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <!-- Active Employees -->
+            <a href="{% url 'employee_list' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'employee_list' or request.resolver_match.url_name == 'employee_create' or request.resolver_match.url_name == 'employee_detail' or request.resolver_match.url_name == 'employee_update' or request.resolver_match.url_name == 'employee_archive' %}active{% endif %}">
+                <i class="bi bi-people-fill"></i>
+                <span>Employees</span>
+            </a>
+
+            <!-- Archived Employees -->
+            <a href="{% url 'archived_employee_list' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'archived_employee_list' %}active{% endif %}">
+                <i class="bi bi-archive-fill"></i>
+                <span>Archived Employees</span>
+            </a>
+
+            <!-- Import Centre -->
+            <a href="{% url 'imports:upload' %}"
+               class="sidebar-link {% if request.resolver_match.app_name == 'imports' %}active{% endif %}">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+                <span>Import centre</span>
+            </a>
+
+            <!-- Duplicate Management -->
+            <a href="{% url 'duplicates:dashboard' %}"
+               class="sidebar-link {% if request.resolver_match.app_name == 'duplicates' %}active{% endif %}">
+                <i class="bi bi-copy"></i>
+                <span>Duplicate Management</span>
+            </a>
+
+            <!-- Analytics -->
+            <a href="/analytics/"
+               class="sidebar-link {% if request.path|slice:':11' == '/analytics/' %}active{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i>
+                <span>Analytics</span>
+            </a>
+
+            <!-- Reports -->
+            <a href="/reports/"
+               class="sidebar-link {% if request.path|slice:':9' == '/reports/' %}active{% endif %}">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+        <div class="nav-section mt-3">SYSTEM</div>
+
+        <nav class="sidebar-nav">
+
+            <a href="/admin/" class="sidebar-link">
+                <i class="bi bi-gear-fill"></i>
+                <span>Administration</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            <div class="system-status">
+                <span class="status-dot"></span>
+                <span>Workforce system</span>
+            </div>
+
+            <div class="small mt-2" style="color:rgba(255,255,255,.4)">
+                Workforce Insights &copy; {% now "Y" %}
+            </div>
+
+        </div>
+
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main content -->
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <button type="button"
+                        class="mobile-menu-button"
+                        id="mobileMenuButton"
+                        aria-label="Open navigation">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+
+                <div>
+                    <div class="topbar-title">
+                        {% block header_title %}Workforce Analytics{% endblock %}
+                    </div>
+
+                    <div class="topbar-subtitle">
+                        {% block header_subtitle %}
+                            Employee data management and insights
+                        {% endblock %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="topbar-actions">
+
+                <div class="d-none d-md-block text-end">
+                    <div class="small fw-semibold">
+                        {{ request.user.get_full_name|default:request.user.username }}
+                    </div>
+                    <div class="small text-muted">
+                        Workspace
+                    </div>
+                </div>
+
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-box-arrow-right me-1"></i>
+                        <span class="d-none d-sm-inline">Sign out</span>
+                    </button>
+                </form>
+
+            </div>
+
+        </header>
+
+        <!-- Notifications -->
+        {% if messages %}
+        <div class="message-container">
+
+            {% for message in messages %}
+
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible fade show"
+                     role="alert">
+
+                    {% if message.tags == "success" %}
+                        <i class="bi bi-check-circle-fill"></i>
+                    {% elif message.tags == "error" %}
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    {% elif message.tags == "warning" %}
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill"></i>
+                    {% endif %}
+
+                    <div class="flex-grow-1">
+                        {{ message }}
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+        {% endif %}
+
+        <!-- Page content -->
+        {% block content %}{% endblock %}
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const sidebar = document.getElementById("appSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    const menuButton = document.getElementById("mobileMenuButton");
+
+    function openSidebar() {
+        sidebar.classList.add("show");
+        overlay.classList.add("show");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove("show");
+        overlay.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+
+    menuButton?.addEventListener("click", openSidebar);
+    overlay?.addEventListener("click", closeSidebar);
+
+    document.querySelectorAll(".sidebar-link").forEach(function (link) {
+        link.addEventListener("click", function () {
+            if (window.innerWidth < 992) {
+                closeSidebar();
+            }
+        });
+    });
+
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>
