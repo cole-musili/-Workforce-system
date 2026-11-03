@@ -30,4 +30,9 @@ urlpatterns = [
     path("duplicates/", include("apps.duplicates.urls")),
     path("analytics/", include("apps.analytics.urls")),
     path("reports/", include("apps.reports.urls")),
+    path(
+    "service-worker.js",
+    core_views.service_worker,
+    name="service_worker",
+    ),
 ]

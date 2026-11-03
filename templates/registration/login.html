@@ -8,6 +8,12 @@
 
     <title>Sign In | Workforce Insights</title>
 
+    <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/pwa-icon-192.png' %}">
+    <meta name="theme-color" content="#103d2d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Workforce">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -156,5 +162,12 @@
     });
 </script>
 
+
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js")
+        .catch(error => console.error("Service worker error:", error));
+}
+</script>
 </body>
 </html>

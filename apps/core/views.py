@@ -13,6 +13,9 @@ from apps.employees.models import Employee
 from apps.duplicates.models import DuplicateGroup
 from .forms import ProfileForm
 
+from django.conf import settings
+from django.http import HttpResponse
+
 
 User = get_user_model()
 
@@ -209,3 +212,15 @@ def reset_user_password(request, user_id):
         "accounts/reset_user_password.html",
         {"form": form, "target_user": target},
     )
+
+def service_worker(request):
+    worker_path = settings.BASE_DIR / "static" / "service-worker.js"
+
+    response = HttpResponse(
+        worker_path.read_text(encoding="utf-8-sig"),
+        content_type="application/javascript",
+    )
+    response["Service-Worker-Allowed"] = "/"
+    response["Cache-Control"] = "no-cache"
+
+    return response
